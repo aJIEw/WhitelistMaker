@@ -1,0 +1,88 @@
+package me.ajiew.bypasslistmaster.data
+
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.core.content.edit
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import me.ajiew.bypasslistmaster.domain.AppSettings
+import me.ajiew.bypasslistmaster.domain.MonitorMode
+import me.ajiew.bypasslistmaster.domain.ServiceStatus
+import me.ajiew.bypasslistmaster.domain.WhitelistConfig
+
+class AppPreferences(context: Context) {
+    private val sharedPreferences: SharedPreferences =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    private val settingsFlow = MutableStateFlow(loadSettings())
+    private val whitelistConfigFlow = MutableStateFlow(loadWhitelistConfig())
+
+    fun settingsFlow(): StateFlow<AppSettings> = settingsFlow.asStateFlow()
+
+    fun whitelistConfigFlow(): StateFlow<WhitelistConfig> = whitelistConfigFlow.asStateFlow()
+
+    fun currentSettings(): AppSettings = settingsFlow.value
+
+    fun currentWhitelistConfig(): WhitelistConfig = whitelistConfigFlow.value
+
+    fun updateMonitorMode(mode: MonitorMode) {
+        sharedPreferences.edit { putString(KEY_MONITOR_MODE, mode.name) }
+        settingsFlow.value = settingsFlow.value.copy(monitorMode = mode)
+    }
+
+    fun updateAutoStart(enabled: Boolean) {
+        sharedPreferences.edit { putBoolean(KEY_AUTO_START, enabled) }
+        settingsFlow.value = settingsFlow.value.copy(autoStartOnBoot = enabled)
+    }
+
+    fun updateServiceStatus(status: ServiceStatus) {
+        settingsFlow.value = settingsFlow.value.copy(serviceStatus = status)
+    }
+
+    fun resetRuntimeState() {
+        sharedPreferences.edit { remove(KEY_SERVICE_STATUS) }
+        settingsFlow.value = settingsFlow.value.copy(serviceStatus = ServiceStatus.Stopped)
+    }
+
+    fun updateWhitelistConfig(config: WhitelistConfig) {
+        sharedPreferences.edit {
+            putString(KEY_WHITELIST_URI, config.importedUri).putString(
+                KEY_WHITELIST_NAME, config.importedDisplayName
+            )
+        }
+        whitelistConfigFlow.value = config
+    }
+
+    private fun loadSettings(): AppSettings {
+        return AppSettings(
+            monitorMode = enumValueOfOrDefault(
+                sharedPreferences.getString(KEY_MONITOR_MODE, null),
+                MonitorMode.Standard,
+            ),
+            autoStartOnBoot = sharedPreferences.getBoolean(KEY_AUTO_START, false),
+            serviceStatus = ServiceStatus.Stopped,
+        )
+    }
+
+    private fun loadWhitelistConfig(): WhitelistConfig {
+        return WhitelistConfig(
+            importedUri = sharedPreferences.getString(KEY_WHITELIST_URI, null),
+            importedDisplayName = sharedPreferences.getString(KEY_WHITELIST_NAME, null),
+        )
+    }
+
+    private fun <T : Enum<T>> enumValueOfOrDefault(raw: String?, default: T): T {
+        return raw?.runCatching { java.lang.Enum.valueOf(default.declaringJavaClass, this) }
+            ?.getOrNull() ?: default
+    }
+
+    private companion object {
+        private const val PREFS_NAME = "bypass_list_master_prefs"
+        private const val KEY_MONITOR_MODE = "monitor_mode"
+        private const val KEY_AUTO_START = "auto_start"
+        private const val KEY_SERVICE_STATUS = "service_status"
+        private const val KEY_WHITELIST_URI = "whitelist_uri"
+        private const val KEY_WHITELIST_NAME = "whitelist_name"
+    }
+}
