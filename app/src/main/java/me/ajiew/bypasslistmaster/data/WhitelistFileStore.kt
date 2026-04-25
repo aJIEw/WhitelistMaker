@@ -29,6 +29,7 @@ class WhitelistFileStore(
             WhitelistConfig(
                 importedUri = uri.toString(),
                 importedDisplayName = displayName,
+                format = preferences.currentWhitelistConfig().format,
             )
         )
         whitelistEntriesFlow.value = loadEntries()
@@ -57,18 +58,26 @@ class WhitelistFileStore(
         buildExportContent(loadEntries())
     }
 
+    suspend fun replaceFromText(content: String): Result<Int> = withContext(Dispatchers.IO) {
+        val format = preferences.currentWhitelistConfig().format
+        WhitelistFormatParser.parse(content, format).mapCatching { parseResult ->
+            writeAll(parseResult.entries)
+            whitelistEntriesFlow.value = parseResult.entries
+            parseResult.entries.size
+        }
+    }
+
     private fun loadEntries(): List<String> {
         val raw = readRawContent()
         if (raw.isBlank()) {
             ensureDefaultFileExists()
             return emptyList()
         }
-        return raw.lineSequence()
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .filterNot { it == DEFAULT_HEADER }
-            .distinct()
-            .toList()
+        val format = preferences.currentWhitelistConfig().format
+        return WhitelistFormatParser.parse(raw, format)
+            .getOrNull()
+            ?.entries
+            .orEmpty()
     }
 
     private fun writeAll(entries: List<String>) {
@@ -97,22 +106,16 @@ class WhitelistFileStore(
     private fun ensureDefaultFileExists(): File {
         val file = File(context.filesDir, DEFAULT_FILE_NAME)
         if (!file.exists()) {
-            file.writeText("$DEFAULT_HEADER\n")
+            file.writeText(buildExportContent(emptyList()))
         } else if (file.readText().isBlank()) {
-            file.writeText("$DEFAULT_HEADER\n")
+            file.writeText(buildExportContent(emptyList()))
         }
         return file
     }
 
     private fun buildExportContent(entries: List<String>): String {
-        return buildString {
-            append(DEFAULT_HEADER)
-            append('\n')
-            entries.forEach { entry ->
-                append(entry)
-                append('\n')
-            }
-        }
+        val format = preferences.currentWhitelistConfig().format
+        return WhitelistFormatParser.build(entries, format)
     }
 
     private fun queryDisplayName(uri: Uri): String? {
@@ -128,6 +131,5 @@ class WhitelistFileStore(
 
     companion object {
         private const val DEFAULT_FILE_NAME = "default_whitelist.txt"
-        private const val DEFAULT_HEADER = "true"
     }
 }

@@ -16,6 +16,7 @@ import me.ajiew.bypasslistmaster.domain.MonitorMode
 import me.ajiew.bypasslistmaster.domain.RootStatus
 import me.ajiew.bypasslistmaster.domain.ServiceStatus
 import me.ajiew.bypasslistmaster.domain.UiMessage
+import me.ajiew.bypasslistmaster.domain.WhitelistFileFormat
 import me.ajiew.bypasslistmaster.monitor.root.RootDaemonBridge
 
 class BypassRepository(
@@ -72,6 +73,11 @@ class BypassRepository(
 
     fun updateAutoStart(enabled: Boolean) {
         preferences.updateAutoStart(enabled)
+    }
+
+    fun updateWhitelistFormat(format: WhitelistFileFormat) {
+        preferences.updateWhitelistFormat(format)
+        setMessage("已选择白名单文件格式：${format.displayName}")
     }
 
     fun updateServiceStatus(status: ServiceStatus) {
@@ -135,6 +141,28 @@ class BypassRepository(
         val content = whitelistFileStore.readExportText()
         clipboardManager.setPrimaryClip(ClipData.newPlainText("bypass whitelist", content))
         setMessage("白名单内容已复制到剪贴板")
+    }
+
+    suspend fun pasteWhitelistFromClipboard() {
+        val clipboardManager = application.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val content = clipboardManager.primaryClip
+            ?.takeIf { it.itemCount > 0 }
+            ?.getItemAt(0)
+            ?.coerceToText(application)
+            ?.toString()
+            .orEmpty()
+        if (content.isBlank()) {
+            setMessage("剪贴板中没有可用的白名单内容", isError = true)
+            return
+        }
+
+        whitelistFileStore.replaceFromText(content)
+            .onSuccess { count ->
+                setMessage("已从剪贴板导入 $count 个白名单包名")
+            }
+            .onFailure { error ->
+                setMessage(error.message ?: "剪贴板内容不符合当前白名单格式", isError = true)
+            }
     }
 
     fun setMessage(text: String, isError: Boolean = false) {

@@ -10,6 +10,7 @@ import me.ajiew.bypasslistmaster.domain.AppSettings
 import me.ajiew.bypasslistmaster.domain.MonitorMode
 import me.ajiew.bypasslistmaster.domain.ServiceStatus
 import me.ajiew.bypasslistmaster.domain.WhitelistConfig
+import me.ajiew.bypasslistmaster.domain.WhitelistFileFormat
 
 class AppPreferences(context: Context) {
     private val sharedPreferences: SharedPreferences =
@@ -49,9 +50,14 @@ class AppPreferences(context: Context) {
         sharedPreferences.edit {
             putString(KEY_WHITELIST_URI, config.importedUri).putString(
                 KEY_WHITELIST_NAME, config.importedDisplayName
-            )
+            ).putString(KEY_WHITELIST_FORMAT, config.format.name)
         }
         whitelistConfigFlow.value = config
+    }
+
+    fun updateWhitelistFormat(format: WhitelistFileFormat) {
+        sharedPreferences.edit { putString(KEY_WHITELIST_FORMAT, format.name) }
+        whitelistConfigFlow.value = whitelistConfigFlow.value.copy(format = format)
     }
 
     private fun loadSettings(): AppSettings {
@@ -69,6 +75,10 @@ class AppPreferences(context: Context) {
         return WhitelistConfig(
             importedUri = sharedPreferences.getString(KEY_WHITELIST_URI, null),
             importedDisplayName = sharedPreferences.getString(KEY_WHITELIST_NAME, null),
+            format = enumValueOfOrDefault(
+                sharedPreferences.getString(KEY_WHITELIST_FORMAT, null),
+                WhitelistFileFormat.TrueHeader,
+            ),
         )
     }
 
@@ -84,5 +94,6 @@ class AppPreferences(context: Context) {
         private const val KEY_SERVICE_STATUS = "service_status"
         private const val KEY_WHITELIST_URI = "whitelist_uri"
         private const val KEY_WHITELIST_NAME = "whitelist_name"
+        private const val KEY_WHITELIST_FORMAT = "whitelist_format"
     }
 }

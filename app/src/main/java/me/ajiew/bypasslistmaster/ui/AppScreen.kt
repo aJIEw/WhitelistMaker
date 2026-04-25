@@ -3,37 +3,40 @@ package me.ajiew.bypasslistmaster.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.TaskAlt
-import androidx.compose.material.icons.outlined.ToggleOff
-import androidx.compose.material.icons.outlined.ToggleOn
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -59,11 +62,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -75,9 +80,16 @@ import me.ajiew.bypasslistmaster.domain.InstallEvent
 import me.ajiew.bypasslistmaster.domain.MonitorMode
 import me.ajiew.bypasslistmaster.domain.RootAvailability
 import me.ajiew.bypasslistmaster.domain.ServiceStatus
+import me.ajiew.bypasslistmaster.domain.WhitelistFileFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+
+private data class WhitelistScrollbarState(
+    val visibleItems: Int,
+    val totalItems: Int,
+    val firstVisibleItemIndex: Int,
+)
 
 enum class AppRoute {
     Home, Whitelist, Settings,
@@ -106,14 +118,11 @@ fun AppScreen(
         }
     }
     Scaffold(
-        topBar = {
-            AppTopBar(selectedRoute)
-        },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         },
         bottomBar = {
-            NavigationBar(modifier = Modifier.navigationBarsPadding()) {
+            NavigationBar {
                 listOf(
                     AppRoute.Home to "主页",
                     AppRoute.Whitelist to "白名单",
@@ -146,23 +155,6 @@ fun AppScreen(
             }
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AppTopBar(route: AppRoute) {
-    CenterAlignedTopAppBar(
-        title = {
-            Text(
-                text = when (route) {
-                    AppRoute.Home -> "安装监听"
-                    AppRoute.Whitelist -> "白名单"
-                    AppRoute.Settings -> "设置"
-                },
-                fontWeight = FontWeight.SemiBold,
-            )
-        },
-    )
 }
 
 @Composable
@@ -216,79 +208,182 @@ private fun WhitelistRoute(
     actions: AppActions,
     innerPadding: PaddingValues,
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = 20.dp,
-            top = innerPadding.calculateTopPadding() + 12.dp,
-            end = 20.dp,
-            bottom = innerPadding.calculateBottomPadding() + 24.dp,
-        ),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+    val sortedWhitelistEntries = remember(uiState.whitelistEntries) {
+        uiState.whitelistEntries.sortedWith(String.CASE_INSENSITIVE_ORDER)
+    }
+    val whitelistListState = rememberLazyListState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(
+                start = 20.dp,
+                top = innerPadding.calculateTopPadding() + 12.dp,
+                end = 20.dp,
+                bottom = innerPadding.calculateBottomPadding() + 12.dp,
+            ),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item {
-            Card(
-                shape = RoundedCornerShape(28.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        Card(
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        "当前共有 ${uiState.whitelistEntries.size} 个包名",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = if (uiState.whitelistConfig.usingDefaultFile) {
-                            "正在使用应用默认白名单文件，首行为 true，后续每行一个包名。"
-                        } else {
-                            "当前写入文件：${uiState.whitelistConfig.importedDisplayName ?: "已导入文件"}"
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(
-                            onClick = actions.onExportWhitelist,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Outlined.FileDownload, contentDescription = null)
-                            Spacer(Modifier.padding(horizontal = 4.dp))
-                            Text("导出到文件")
-                        }
-                        OutlinedButton(
-                            onClick = actions.onCopyWhitelist,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Outlined.ContentCopy, contentDescription = null)
-                            Spacer(Modifier.padding(horizontal = 4.dp))
-                            Text("复制到剪贴板")
-                        }
+                Text(
+                    text = if (uiState.whitelistConfig.usingDefaultFile) {
+                        "正在使用应用默认白名单文件。"
+                    } else {
+                        "当前写入文件：${uiState.whitelistConfig.importedDisplayName ?: "已导入文件"}"
+                    }, style = MaterialTheme.typography.titleMedium
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedButton(
+                        onClick = actions.onCopyWhitelist,
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.size(4.dp))
+                        Text("复制到剪贴板", maxLines = 1, softWrap = false)
                     }
                 }
             }
         }
-        if (uiState.whitelistEntries.isEmpty()) {
-            item {
-                EmptyStateCard(
-                    title = "白名单还是空的",
-                    body = "从主页把监听到的包名追加进来，或者先导入一个已有白名单文件。",
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text("白名单列表", style = MaterialTheme.typography.titleMedium)
+                    StatusPill(
+                        label = "${uiState.whitelistEntries.size} 个包名",
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                ) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 12.dp),
+                        state = whitelistListState,
+                        contentPadding = PaddingValues(bottom = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        if (sortedWhitelistEntries.isEmpty()) {
+                            item {
+                                EmptyStateCard(
+                                    title = "白名单还是空的",
+                                    body = "从主页把监听到的包名追加进来，或者先导入一个已有白名单文件。",
+                                )
+                            }
+                        } else {
+                            items(sortedWhitelistEntries, key = { it }) { packageName ->
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateItem(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                ) {
+                                    Text(
+                                        text = packageName,
+                                        modifier = Modifier.padding(
+                                            horizontal = 14.dp,
+                                            vertical = 10.dp
+                                        ),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    WhitelistListScrollbar(
+                        listState = whitelistListState,
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WhitelistListScrollbar(
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    modifier: Modifier = Modifier,
+) {
+    var scrollbarState by remember { mutableStateOf<WhitelistScrollbarState?>(null) }
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            val visibleItems = layoutInfo.visibleItemsInfo.size
+            val canScroll = listState.canScrollBackward || listState.canScrollForward
+            if (!canScroll || totalItems == 0 || visibleItems == 0) {
+                null
+            } else {
+                WhitelistScrollbarState(
+                    visibleItems = visibleItems,
+                    totalItems = totalItems,
+                    firstVisibleItemIndex = listState.firstVisibleItemIndex,
                 )
             }
-        } else {
-            items(uiState.whitelistEntries, key = { it }) { packageName ->
-                Card(shape = RoundedCornerShape(22.dp)) {
-                    Column(modifier = Modifier.padding(18.dp)) {
-                        Text(
-                            packageName,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
+        }.collect { state ->
+            scrollbarState = state
         }
+    }
+    val state = scrollbarState ?: return
+    val density = LocalDensity.current
+
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxHeight()
+            .width(8.dp)
+            .padding(end = 3.dp),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        val trackHeightPx = constraints.maxHeight.toFloat()
+        val minThumbHeightPx = with(density) { 36.dp.toPx() }
+        val thumbHeightPx =
+            (trackHeightPx * state.visibleItems / state.totalItems).coerceIn(minThumbHeightPx, trackHeightPx)
+        val maxOffsetPx = (trackHeightPx - thumbHeightPx).coerceAtLeast(0f)
+        val maxFirstVisibleIndex = (state.totalItems - state.visibleItems).coerceAtLeast(1)
+        val offsetRatio = state.firstVisibleItemIndex.toFloat() / maxFirstVisibleIndex
+        val thumbOffset = with(density) { (maxOffsetPx * offsetRatio).toDp() }
+        val thumbHeight = with(density) { thumbHeightPx.toDp() }
+
+        Box(
+            modifier = Modifier
+                .offset(y = thumbOffset)
+                .width(3.dp)
+                .height(thumbHeight)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.55f))
+        )
     }
 }
 
@@ -385,6 +480,35 @@ private fun SettingsRoute(
         item {
             Card(shape = RoundedCornerShape(28.dp)) {
                 Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Text("白名单文件格式", style = MaterialTheme.typography.titleMedium)
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        WhitelistFileFormat.entries.forEach { format ->
+                            FilterChip(
+                                selected = uiState.whitelistConfig.format == format,
+                                onClick = { actions.onChangeWhitelistFormat(format) },
+                                label = { Text(format.displayName) },
+                            )
+                        }
+                    }
+                    Text(
+                        uiState.whitelistConfig.format.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+        item {
+            Card(shape = RoundedCornerShape(28.dp)) {
+                Column(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -408,14 +532,12 @@ private fun SettingsRoute(
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Button(
-                            onClick = actions.onStartRootDaemon,
-                            modifier = Modifier.weight(1f)
+                            onClick = actions.onStartRootDaemon, modifier = Modifier.weight(1f)
                         ) {
                             Text("启动 daemon")
                         }
                         OutlinedButton(
-                            onClick = actions.onStopRootDaemon,
-                            modifier = Modifier.weight(1f)
+                            onClick = actions.onStopRootDaemon, modifier = Modifier.weight(1f)
                         ) {
                             Text("停止 daemon")
                         }
@@ -424,6 +546,30 @@ private fun SettingsRoute(
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun HeroStatusCardPreview() {
+    HeroStatusCard(
+        uiState = AppUiState(),
+        actions = AppActions(
+            onToggleService = { },
+            onImportWhitelist = { },
+            onExportWhitelist = { },
+            onCopyWhitelist = { },
+            onPasteWhitelistFromClipboard = { },
+            onAddToWhitelist = { _, _ -> },
+            onIgnoreEvent = { },
+            onDeleteEvent = { },
+            onRestoreDeletedEvent = { },
+            onChangeMonitorMode = { },
+            onToggleAutoStart = { },
+            onChangeWhitelistFormat = { },
+            onStartRootDaemon = { },
+            onStopRootDaemon = { },
+        ),
+    )
 }
 
 @Composable
@@ -481,16 +627,16 @@ private fun HeroStatusCard(
                     onClick = {
                         actions.onToggleService(uiState.settings.serviceStatus != ServiceStatus.Running)
                     },
-                ) {
-                    Icon(
-                        imageVector = if (uiState.settings.serviceStatus == ServiceStatus.Running) {
-                            Icons.Outlined.ToggleOff
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (uiState.settings.serviceStatus == ServiceStatus.Running) {
+                            Color(0xFFD20808)
                         } else {
-                            Icons.Outlined.ToggleOn
+                            Color(0xFF1BCE71)
                         },
-                        contentDescription = null,
-                    )
-                    Spacer(Modifier.padding(horizontal = 4.dp))
+                        contentColor = Color.White,
+                    ),
+                ) {
                     Text(
                         if (uiState.settings.serviceStatus == ServiceStatus.Running) {
                             "停止监听服务"
@@ -511,8 +657,7 @@ private fun WhitelistFileCard(
 ) {
     Card(shape = RoundedCornerShape(28.dp)) {
         Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             SectionHeader(
                 title = "白名单文件",
@@ -520,7 +665,7 @@ private fun WhitelistFileCard(
             )
             Text(
                 text = if (uiState.whitelistConfig.usingDefaultFile) {
-                    "当前未指定文件，应用会在私有目录使用默认格式：第一行 true，后续每行一个包名。"
+                    "当前未指定文件，应用会在私有目录使用${uiState.whitelistConfig.format.displayName}。"
                 } else {
                     "当前写入目标：${uiState.whitelistConfig.importedDisplayName ?: "已导入文件"}"
                 },
@@ -534,12 +679,15 @@ private fun WhitelistFileCard(
                     Text("导入文件")
                 }
                 OutlinedButton(
-                    onClick = actions.onExportWhitelist,
-                    modifier = Modifier.weight(1f)
+                    onClick = actions.onPasteWhitelistFromClipboard, modifier = Modifier.weight(1f)
                 ) {
-                    Icon(Icons.Outlined.FileDownload, contentDescription = null)
+                    Icon(
+                        Icons.Outlined.ContentPaste,
+                        modifier = Modifier.size(18.dp),
+                        contentDescription = null,
+                    )
                     Spacer(Modifier.padding(horizontal = 4.dp))
-                    Text("导出文件")
+                    Text("从剪贴板复制", maxLines = 1, softWrap = false)
                 }
             }
         }
@@ -553,14 +701,13 @@ private fun InstallEventCard(
     actions: AppActions,
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { targetValue ->
-            if (targetValue == SwipeToDismissBoxValue.EndToStart) {
-                actions.onDeleteEvent(event.id)
-            }
-            targetValue != SwipeToDismissBoxValue.StartToEnd
-        },
         positionalThreshold = { distance -> distance * 0.35f },
     )
+    LaunchedEffect(dismissState.currentValue, event.id) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+            actions.onDeleteEvent(event.id)
+        }
+    }
     SwipeToDismissBox(
         state = dismissState,
         enableDismissFromStartToEnd = false,
@@ -612,9 +759,7 @@ private fun InstallEventCard(
                         )
                     }
                     Text(
-                        text = "${formatTimestamp(event.installedAt)} · ${
-                            if (event.sourceMode == MonitorMode.Standard) "前台服务" else "增强模式"
-                        }",
+                        text = formatTimestamp(event.installedAt),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -684,7 +829,7 @@ private fun DeleteActionBackgroundTextIcon() {
     ) {
         Text(
             text = "左\n滑\n删\n除",
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             color = Color(0xFFEAB8B8),
         )
         Icon(
@@ -724,8 +869,7 @@ private fun MessageCard(text: String, isError: Boolean) {
 private fun EmptyStateCard(title: String, body: String) {
     Card(shape = RoundedCornerShape(24.dp)) {
         Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(title, style = MaterialTheme.typography.titleMedium)
             Text(

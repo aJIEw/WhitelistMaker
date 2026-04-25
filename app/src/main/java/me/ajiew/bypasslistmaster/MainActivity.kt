@@ -84,12 +84,14 @@ class MainActivity : ComponentActivity() {
                             exportLauncher.launch("bypass-whitelist.txt")
                         },
                         onCopyWhitelist = viewModel::copyWhitelistToClipboard,
+                        onPasteWhitelistFromClipboard = viewModel::pasteWhitelistFromClipboard,
                         onAddToWhitelist = viewModel::addEventToWhitelist,
                         onIgnoreEvent = viewModel::ignoreEvent,
                         onDeleteEvent = viewModel::deleteEvent,
                         onRestoreDeletedEvent = viewModel::restoreDeletedEvent,
                         onChangeMonitorMode = viewModel::updateMonitorMode,
                         onToggleAutoStart = viewModel::updateAutoStart,
+                        onChangeWhitelistFormat = viewModel::updateWhitelistFormat,
                         onStartRootDaemon = viewModel::startRootDaemon,
                         onStopRootDaemon = viewModel::stopRootDaemon,
                     )

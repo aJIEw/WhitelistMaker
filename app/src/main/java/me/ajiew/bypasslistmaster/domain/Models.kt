@@ -18,6 +18,16 @@ enum class EventDecision {
     Ignored,
 }
 
+enum class WhitelistFileFormat(
+    val displayName: String,
+    val description: String,
+) {
+    TrueHeader(
+        displayName = "默认格式",
+        description = "首行为 true，后续每行一个应用包名",
+    ),
+}
+
 data class InstallEvent(
     val id: String,
     val packageName: String,
@@ -30,6 +40,7 @@ data class InstallEvent(
 data class WhitelistConfig(
     val importedUri: String? = null,
     val importedDisplayName: String? = null,
+    val format: WhitelistFileFormat = WhitelistFileFormat.TrueHeader,
 ) {
     val usingDefaultFile: Boolean
         get() = importedUri.isNullOrBlank()

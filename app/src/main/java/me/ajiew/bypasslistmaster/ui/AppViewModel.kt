@@ -18,6 +18,7 @@ import me.ajiew.bypasslistmaster.domain.InstallEvent
 import me.ajiew.bypasslistmaster.domain.MonitorMode
 import me.ajiew.bypasslistmaster.domain.RootAvailability
 import me.ajiew.bypasslistmaster.domain.RootStatus
+import me.ajiew.bypasslistmaster.domain.WhitelistFileFormat
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: BypassRepository =
@@ -69,6 +70,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun pasteWhitelistFromClipboard() {
+        viewModelScope.launch {
+            repository.pasteWhitelistFromClipboard()
+        }
+    }
+
     fun addEventToWhitelist(eventId: String, packageName: String) {
         viewModelScope.launch {
             repository.addEventToWhitelist(eventId, packageName)
@@ -104,6 +111,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateAutoStart(enabled: Boolean) {
         repository.updateAutoStart(enabled)
+    }
+
+    fun updateWhitelistFormat(format: WhitelistFileFormat) {
+        repository.updateWhitelistFormat(format)
     }
 
     fun startRootDaemon() {
