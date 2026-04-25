@@ -22,6 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "BypassList Master"
+rootProject.name = "Whitelist Maker"
 include(":app")
- 

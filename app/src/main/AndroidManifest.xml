@@ -15,20 +15,19 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <application
-        android:name=".BypassListMasterApp"
+        android:name=".WhitelistMakerApp"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_rules"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.BypassListMaster">
+        android:theme="@style/Theme.WhitelistMaker">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.BypassListMaster">
+            android:theme="@style/Theme.WhitelistMaker">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -37,7 +36,7 @@
         </activity>
 
         <service
-            android:name=".service.InstallMonitorService"
+            android:name=".monitor.standard.InstallMonitorService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse">
@@ -47,7 +46,7 @@
         </service>
 
         <receiver
-            android:name=".service.BootReceiver"
+            android:name=".monitor.standard.BootReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
