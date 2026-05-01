@@ -42,7 +42,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val deletedEvents = deletedEventsFlow.asSharedFlow()
 
     init {
-        repository.resetRuntimeState()
         refreshRootStatus()
     }
 

@@ -51,7 +51,7 @@ fun AppScreen(
     LaunchedEffect(deletedEvents) {
         deletedEvents.collectLatest { deletedEvent ->
             val result = snackbarHostState.showSnackbar(
-                message = "${deletedEvent.appLabel} 已删除",
+                message = "${deletedEvent.appLabel} 安装记录已删除",
                 actionLabel = "撤销",
                 withDismissAction = true,
                 duration = SnackbarDuration.Long,

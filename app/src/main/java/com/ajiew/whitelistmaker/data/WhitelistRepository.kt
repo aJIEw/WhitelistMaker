@@ -92,10 +92,11 @@ class WhitelistRepository(
 
     fun currentAutoStartEnabled(): Boolean = preferences.currentSettings().autoStartOnBoot
 
-    suspend fun recordInstalledPackage(packageName: String, sourceMode: MonitorMode) {
+    suspend fun recordInstalledPackage(packageName: String, sourceMode: MonitorMode): InstallEvent {
         val label = resolveLabel(packageName)
-        installEventStore.recordInstallEvent(packageName, label, sourceMode)
+        val event = installEventStore.recordInstallEvent(packageName, label, sourceMode)
         setMessage("发现新安装应用：$packageName")
+        return event
     }
 
     suspend fun addEventToWhitelist(eventId: String, packageName: String) {

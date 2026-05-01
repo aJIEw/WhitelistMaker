@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileOpen
+import androidx.compose.material.icons.outlined.NotInterested
 import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -327,6 +328,8 @@ private fun InstallEventCard(
                                 onClick = { actions.onIgnoreEvent(event.id) },
                                 modifier = Modifier.weight(1f),
                             ) {
+                                Icon(Icons.Outlined.NotInterested, contentDescription = null)
+                                Spacer(Modifier.padding(horizontal = 4.dp))
                                 Text("忽略")
                             }
                         }

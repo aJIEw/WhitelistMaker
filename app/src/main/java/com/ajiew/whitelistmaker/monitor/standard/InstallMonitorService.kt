@@ -90,10 +90,11 @@ class InstallMonitorService : Service() {
                 Log.i(TAG, "onReceive: package added detected for $packageName")
                 serviceScope.launch {
                     Log.i(TAG, "onReceive: persisting install event for $packageName")
-                    repository.recordInstalledPackage(
+                    val event = repository.recordInstalledPackage(
                         packageName = packageName,
                         sourceMode = currentMonitorMode(),
                     )
+                    notificationHelper.showInstallEventNotification(event)
                     Log.i(TAG, "onReceive: install event persisted for $packageName")
                 }
             }
