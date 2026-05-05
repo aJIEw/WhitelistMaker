@@ -89,11 +89,8 @@ class MainActivity : ComponentActivity() {
                         onIgnoreEvent = viewModel::ignoreEvent,
                         onDeleteEvent = viewModel::deleteEvent,
                         onRestoreDeletedEvent = viewModel::restoreDeletedEvent,
-                        onChangeMonitorMode = viewModel::updateMonitorMode,
                         onToggleAutoStart = viewModel::updateAutoStart,
                         onChangeWhitelistFormat = viewModel::updateWhitelistFormat,
-                        onStartRootDaemon = viewModel::startRootDaemon,
-                        onStopRootDaemon = viewModel::stopRootDaemon,
                     )
                 }
 

@@ -12,23 +12,19 @@ import kotlinx.coroutines.flow.combine
 import com.ajiew.whitelistmaker.domain.AppUiState
 import com.ajiew.whitelistmaker.domain.EventDecision
 import com.ajiew.whitelistmaker.domain.InstallEvent
-import com.ajiew.whitelistmaker.domain.MonitorMode
-import com.ajiew.whitelistmaker.domain.RootStatus
 import com.ajiew.whitelistmaker.domain.ServiceStatus
 import com.ajiew.whitelistmaker.domain.UiMessage
 import com.ajiew.whitelistmaker.domain.WhitelistFileFormat
-import com.ajiew.whitelistmaker.monitor.root.RootDaemonBridge
 
 class WhitelistRepository(
     private val application: Application,
     private val preferences: AppPreferences,
     private val installEventStore: InstallEventStore,
     private val whitelistFileStore: WhitelistFileStore,
-    private val rootDaemonBridge: RootDaemonBridge,
 ) {
     private val messageFlow = MutableStateFlow<UiMessage?>(null)
 
-    fun uiState(rootStatus: Flow<RootStatus>): Flow<AppUiState> {
+    fun uiState(): Flow<AppUiState> {
         val settingsAndConfig = combine(
             preferences.settingsFlow(),
             preferences.whitelistConfigFlow(),
@@ -44,30 +40,15 @@ class WhitelistRepository(
         return combine(
             settingsAndConfig,
             entriesAndEvents,
-            rootStatus,
             messageFlow,
-        ) { settingsPair, dataPair, currentRootStatus, message ->
+        ) { settingsPair, dataPair, message ->
             AppUiState(
                 settings = settingsPair.first,
                 whitelistConfig = settingsPair.second,
                 whitelistEntries = dataPair.first,
                 installEvents = dataPair.second,
-                rootStatus = currentRootStatus,
                 latestMessage = message,
             )
-        }
-    }
-
-    suspend fun refreshRootStatus(): RootStatus = rootDaemonBridge.getStatus()
-
-    suspend fun startRootDaemon(): RootStatus = rootDaemonBridge.startDaemon()
-
-    suspend fun stopRootDaemon(): RootStatus = rootDaemonBridge.stopDaemon()
-
-    fun updateMonitorMode(mode: MonitorMode) {
-        preferences.updateMonitorMode(mode)
-        if (mode == MonitorMode.EnhancedRoot) {
-            setMessage("已切换到增强模式，当前构建会优先展示 root 状态并保留标准监听作为兜底。")
         }
     }
 
@@ -88,13 +69,11 @@ class WhitelistRepository(
         preferences.resetRuntimeState()
     }
 
-    fun currentMonitorMode(): MonitorMode = preferences.currentSettings().monitorMode
-
     fun currentAutoStartEnabled(): Boolean = preferences.currentSettings().autoStartOnBoot
 
-    suspend fun recordInstalledPackage(packageName: String, sourceMode: MonitorMode): InstallEvent {
+    suspend fun recordInstalledPackage(packageName: String): InstallEvent {
         val label = resolveLabel(packageName)
-        val event = installEventStore.recordInstallEvent(packageName, label, sourceMode)
+        val event = installEventStore.recordInstallEvent(packageName, label)
         setMessage("发现新安装应用：$packageName")
         return event
     }

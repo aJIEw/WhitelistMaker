@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import com.ajiew.whitelistmaker.domain.EventDecision
 import com.ajiew.whitelistmaker.domain.InstallEvent
-import com.ajiew.whitelistmaker.domain.MonitorMode
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -23,7 +22,6 @@ class InstallEventStore(context: Context) {
     suspend fun recordInstallEvent(
         packageName: String,
         appLabel: String,
-        sourceMode: MonitorMode,
     ): InstallEvent = withContext(Dispatchers.IO) {
         val updated = buildList {
             add(
@@ -32,7 +30,6 @@ class InstallEventStore(context: Context) {
                     packageName = packageName,
                     appLabel = appLabel,
                     installedAt = System.currentTimeMillis(),
-                    sourceMode = sourceMode,
                 )
             )
             addAll(eventsFlow.value.filterNot { it.packageName == packageName && it.decision == EventDecision.Pending })
@@ -76,7 +73,6 @@ class InstallEventStore(context: Context) {
                     .put("packageName", event.packageName)
                     .put("appLabel", event.appLabel)
                     .put("installedAt", event.installedAt)
-                    .put("sourceMode", event.sourceMode.name)
                     .put("decision", event.decision.name)
             )
         }
@@ -99,7 +95,6 @@ class InstallEventStore(context: Context) {
                         packageName = item.getString("packageName"),
                         appLabel = item.optString("appLabel", item.getString("packageName")),
                         installedAt = item.getLong("installedAt"),
-                        sourceMode = MonitorMode.valueOf(item.optString("sourceMode", MonitorMode.Standard.name)),
                         decision = EventDecision.valueOf(item.optString("decision", EventDecision.Pending.name)),
                     )
                 )

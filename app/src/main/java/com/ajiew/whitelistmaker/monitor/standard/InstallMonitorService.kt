@@ -15,7 +15,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import com.ajiew.whitelistmaker.WhitelistMakerApp
-import com.ajiew.whitelistmaker.domain.MonitorMode
 import com.ajiew.whitelistmaker.domain.ServiceStatus
 
 class InstallMonitorService : Service() {
@@ -40,16 +39,10 @@ class InstallMonitorService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.i(
             TAG,
-            "onStartCommand: flags=$flags startId=$startId mode=${app().appContainer.repository.currentMonitorMode()}",
+            "onStartCommand: flags=$flags startId=$startId",
         )
         val repository = app().appContainer.repository
         serviceScope.launch {
-            if (repository.currentMonitorMode() == MonitorMode.EnhancedRoot) {
-                Log.i(TAG, "onStartCommand: requesting root daemon startup")
-                val rootStatus = repository.startRootDaemon()
-                Log.i(TAG, "onStartCommand: root daemon status=${rootStatus.message}")
-                repository.setMessage(rootStatus.message)
-            }
             repository.updateServiceStatus(ServiceStatus.Running)
             repository.setMessage("监听服务已启动，正在等待新安装应用。")
             Log.i(TAG, "onStartCommand: service status updated to running")
@@ -92,7 +85,6 @@ class InstallMonitorService : Service() {
                     Log.i(TAG, "onReceive: persisting install event for $packageName")
                     val event = repository.recordInstalledPackage(
                         packageName = packageName,
-                        sourceMode = currentMonitorMode(),
                     )
                     notificationHelper.showInstallEventNotification(event)
                     Log.i(TAG, "onReceive: install event persisted for $packageName")
@@ -112,10 +104,6 @@ class InstallMonitorService : Service() {
             ContextCompat.registerReceiver(this, packageReceiver, filter, ContextCompat.RECEIVER_EXPORTED)
         }
         Log.i(TAG, "registerInstallReceiver: receiver registered")
-    }
-
-    private fun currentMonitorMode(): MonitorMode {
-        return app().appContainer.repository.currentMonitorMode()
     }
 
     private fun app(): WhitelistMakerApp = application as WhitelistMakerApp

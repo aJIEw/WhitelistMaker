@@ -11,15 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.NotificationsActive
-import androidx.compose.material.icons.outlined.Security
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,12 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ajiew.whitelistmaker.domain.AppUiState
-import com.ajiew.whitelistmaker.domain.MonitorMode
-import com.ajiew.whitelistmaker.domain.RootAvailability
 import com.ajiew.whitelistmaker.domain.WhitelistFileFormat
 import com.ajiew.whitelistmaker.ui.AppActions
 import com.ajiew.whitelistmaker.ui.PreviewDefaults
-import com.ajiew.whitelistmaker.ui.components.StatusPill
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -53,16 +44,10 @@ internal fun SettingsRoute(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            MonitorModeCard(uiState, actions)
-        }
-        item {
             AutoStartCard(uiState, actions)
         }
         item {
             WhitelistFormatCard(uiState, actions)
-        }
-        item {
-            RootStatusCard(uiState, actions)
         }
     }
 }
@@ -75,60 +60,6 @@ private fun SettingsRoutePreview() {
         actions = PreviewDefaults.actions,
         innerPadding = PaddingValues(),
     )
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun MonitorModeCard(
-    uiState: AppUiState,
-    actions: AppActions,
-) {
-    Card(shape = RoundedCornerShape(28.dp)) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Text("监听模式", style = MaterialTheme.typography.titleMedium)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                MonitorMode.entries.forEach { mode ->
-                    FilterChip(
-                        selected = uiState.settings.monitorMode == mode,
-                        onClick = { actions.onChangeMonitorMode(mode) },
-                        label = {
-                            Text(
-                                when (mode) {
-                                    MonitorMode.Standard -> "普通模式"
-                                    MonitorMode.EnhancedRoot -> "增强模式"
-                                },
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = if (mode == MonitorMode.Standard) {
-                                    Icons.Outlined.NotificationsActive
-                                } else {
-                                    Icons.Outlined.Security
-                                },
-                                contentDescription = null,
-                            )
-                        },
-                    )
-                }
-            }
-            Text(
-                text = if (uiState.settings.monitorMode == MonitorMode.Standard) {
-                    "普通模式使用前台服务动态监听安装广播，适合先快速稳定落地。"
-                } else {
-                    "增强模式已预留 root daemon 通道，当前版本会显示 root 状态并继续保留标准监听作为兜底。"
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
 }
 
 @Composable
@@ -192,52 +123,6 @@ private fun WhitelistFormatCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-        }
-    }
-}
-
-@Composable
-private fun RootStatusCard(
-    uiState: AppUiState,
-    actions: AppActions,
-) {
-    Card(shape = RoundedCornerShape(28.dp)) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text("Root 状态", style = MaterialTheme.typography.titleMedium)
-            StatusPill(
-                label = when (uiState.rootStatus.availability) {
-                    RootAvailability.Unknown -> "检查中"
-                    RootAvailability.Unsupported -> "未接入"
-                    RootAvailability.Ready -> "可用"
-                },
-                color = when (uiState.rootStatus.availability) {
-                    RootAvailability.Ready -> MaterialTheme.colorScheme.primary
-                    RootAvailability.Unsupported -> MaterialTheme.colorScheme.secondary
-                    RootAvailability.Unknown -> MaterialTheme.colorScheme.tertiary
-                },
-            )
-            Text(
-                uiState.rootStatus.message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(
-                    onClick = actions.onStartRootDaemon,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text("启动 daemon")
-                }
-                OutlinedButton(
-                    onClick = actions.onStopRootDaemon,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text("停止 daemon")
-                }
-            }
         }
     }
 }

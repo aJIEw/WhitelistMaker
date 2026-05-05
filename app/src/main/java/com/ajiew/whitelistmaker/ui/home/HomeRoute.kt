@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import com.ajiew.whitelistmaker.domain.AppUiState
 import com.ajiew.whitelistmaker.domain.EventDecision
 import com.ajiew.whitelistmaker.domain.InstallEvent
-import com.ajiew.whitelistmaker.domain.MonitorMode
 import com.ajiew.whitelistmaker.domain.ServiceStatus
 import com.ajiew.whitelistmaker.ui.AppActions
 import com.ajiew.whitelistmaker.ui.PreviewDefaults
@@ -159,14 +158,6 @@ private fun HeroStatusCard(
                             ServiceStatus.Starting -> "服务启动中"
                             ServiceStatus.Running -> "服务运行中"
                             ServiceStatus.Error -> "服务异常"
-                        },
-                        color = Color.White.copy(alpha = 0.18f),
-                        contentColor = Color.White,
-                    )
-                    StatusPill(
-                        label = when (uiState.settings.monitorMode) {
-                            MonitorMode.Standard -> "普通模式"
-                            MonitorMode.EnhancedRoot -> "增强模式"
                         },
                         color = Color.White.copy(alpha = 0.18f),
                         contentColor = Color.White,

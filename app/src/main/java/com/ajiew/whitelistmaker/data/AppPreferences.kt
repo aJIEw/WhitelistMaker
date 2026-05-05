@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.ajiew.whitelistmaker.domain.AppSettings
-import com.ajiew.whitelistmaker.domain.MonitorMode
 import com.ajiew.whitelistmaker.domain.ServiceStatus
 import com.ajiew.whitelistmaker.domain.WhitelistConfig
 import com.ajiew.whitelistmaker.domain.WhitelistFileFormat
@@ -26,11 +25,6 @@ class AppPreferences(context: Context) {
     fun currentSettings(): AppSettings = settingsFlow.value
 
     fun currentWhitelistConfig(): WhitelistConfig = whitelistConfigFlow.value
-
-    fun updateMonitorMode(mode: MonitorMode) {
-        sharedPreferences.edit { putString(KEY_MONITOR_MODE, mode.name) }
-        settingsFlow.value = settingsFlow.value.copy(monitorMode = mode)
-    }
 
     fun updateAutoStart(enabled: Boolean) {
         sharedPreferences.edit { putBoolean(KEY_AUTO_START, enabled) }
@@ -62,10 +56,6 @@ class AppPreferences(context: Context) {
 
     private fun loadSettings(): AppSettings {
         return AppSettings(
-            monitorMode = enumValueOfOrDefault(
-                sharedPreferences.getString(KEY_MONITOR_MODE, null),
-                MonitorMode.Standard,
-            ),
             autoStartOnBoot = sharedPreferences.getBoolean(KEY_AUTO_START, false),
             serviceStatus = ServiceStatus.Stopped,
         )
@@ -89,7 +79,6 @@ class AppPreferences(context: Context) {
 
     private companion object {
         private const val PREFS_NAME = "whitelist_prefs"
-        private const val KEY_MONITOR_MODE = "monitor_mode"
         private const val KEY_AUTO_START = "auto_start"
         private const val KEY_SERVICE_STATUS = "service_status"
         private const val KEY_WHITELIST_URI = "whitelist_uri"
