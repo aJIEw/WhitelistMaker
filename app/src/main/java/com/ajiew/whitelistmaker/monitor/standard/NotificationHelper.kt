@@ -45,7 +45,7 @@ class NotificationHelper(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         return NotificationCompat.Builder(context, SERVICE_CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher).setContentTitle("Whitelist Maker")
+            .setSmallIcon(R.drawable.ic_launcher_monochrome).setContentTitle("Whitelist Maker")
             .setContentText(contentText).setContentIntent(pendingIntent).setOngoing(true)
             .setOnlyAlertOnce(true).build()
     }
@@ -82,11 +82,11 @@ class NotificationHelper(private val context: Context) {
             notificationId = notificationId,
         )
         val notification = NotificationCompat.Builder(context, INSTALL_EVENT_CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher).setContentTitle(event.appLabel)
+            .setSmallIcon(R.drawable.ic_launcher_monochrome).setContentTitle(event.appLabel)
             .setContentText(event.packageName).setContentIntent(contentIntent).setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_STATUS).addAction(
-                R.mipmap.ic_launcher,
+                R.drawable.ic_launcher_monochrome,
                 "添加",
                 PendingIntent.getBroadcast(
                     context,
@@ -95,7 +95,7 @@ class NotificationHelper(private val context: Context) {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 ),
             ).addAction(
-                R.mipmap.ic_launcher,
+                R.drawable.ic_launcher_monochrome,
                 "忽略",
                 PendingIntent.getBroadcast(
                     context,
