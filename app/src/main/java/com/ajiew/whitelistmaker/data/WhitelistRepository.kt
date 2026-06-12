@@ -6,9 +6,12 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.withContext
 import com.ajiew.whitelistmaker.domain.AppUiState
 import com.ajiew.whitelistmaker.domain.EventDecision
 import com.ajiew.whitelistmaker.domain.InstallEvent
@@ -25,6 +28,18 @@ class WhitelistRepository(
     private val messageFlow = MutableStateFlow<UiMessage?>(null)
 
     fun uiState(): Flow<AppUiState> {
+        val whitelistEntriesFlow = whitelistFileStore.entriesFlow()
+            .transform { packageNames ->
+                val unresolvedEntries = WhitelistEntryMapper.map(packageNames) { null }
+                emit(unresolvedEntries)
+
+                val resolvedEntries = withContext(Dispatchers.IO) {
+                    WhitelistEntryMapper.map(packageNames, ::resolveInstalledAppLabel)
+                }
+                if (resolvedEntries != unresolvedEntries) {
+                    emit(resolvedEntries)
+                }
+            }
         val settingsAndConfig = combine(
             preferences.settingsFlow(),
             preferences.whitelistConfigFlow(),
@@ -32,7 +47,7 @@ class WhitelistRepository(
             settings to whitelistConfig
         }
         val entriesAndEvents = combine(
-            whitelistFileStore.entriesFlow(),
+            whitelistEntriesFlow,
             installEventStore.eventsFlow(),
         ) { whitelistEntries, installEvents ->
             whitelistEntries to installEvents
@@ -72,7 +87,7 @@ class WhitelistRepository(
     fun currentAutoStartEnabled(): Boolean = preferences.currentSettings().autoStartOnBoot
 
     suspend fun recordInstalledPackage(packageName: String): InstallEvent {
-        val label = resolveLabel(packageName)
+        val label = resolveInstalledAppLabel(packageName) ?: packageName
         val event = installEventStore.recordInstallEvent(packageName, label)
         setMessage("发现新安装应用：$packageName")
         return event
@@ -149,10 +164,10 @@ class WhitelistRepository(
         messageFlow.value = UiMessage(text = text, isError = isError)
     }
 
-    private fun resolveLabel(packageName: String): String {
+    private fun resolveInstalledAppLabel(packageName: String): String? {
         return runCatching {
             val applicationInfo = application.packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
             application.packageManager.getApplicationLabel(applicationInfo).toString()
-        }.getOrDefault(packageName)
+        }.getOrNull()
     }
 }

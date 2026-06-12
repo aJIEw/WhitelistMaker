@@ -7,6 +7,7 @@ import com.ajiew.whitelistmaker.domain.InstallEvent
 import com.ajiew.whitelistmaker.domain.ServiceStatus
 import com.ajiew.whitelistmaker.domain.UiMessage
 import com.ajiew.whitelistmaker.domain.WhitelistConfig
+import com.ajiew.whitelistmaker.domain.WhitelistEntry
 
 internal object PreviewDefaults {
     val actions = AppActions(
@@ -33,9 +34,18 @@ internal object PreviewDefaults {
             importedDisplayName = "bypass-whitelist.txt",
         ),
         whitelistEntries = listOf(
-            "com.android.chrome",
-            "com.example.reader",
-            "com.ajiew.whitelistmaker",
+            WhitelistEntry(
+                packageName = "com.android.chrome",
+                appLabel = "Chrome",
+            ),
+            WhitelistEntry(
+                packageName = "com.example.reader",
+                appLabel = "",
+            ),
+            WhitelistEntry(
+                packageName = "com.ajiew.whitelistmaker",
+                appLabel = "Whitelist Maker",
+            ),
         ),
         installEvents = listOf(
             InstallEvent(
