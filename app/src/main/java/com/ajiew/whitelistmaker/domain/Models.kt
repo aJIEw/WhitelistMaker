@@ -40,6 +40,11 @@ data class WhitelistConfig(
         get() = importedUri.isNullOrBlank()
 }
 
+data class WhitelistEntry(
+    val packageName: String,
+    val appLabel: String = "",
+)
+
 data class AppSettings(
     val autoStartOnBoot: Boolean = false,
     val serviceStatus: ServiceStatus = ServiceStatus.Stopped,
@@ -53,7 +58,7 @@ data class UiMessage(
 data class AppUiState(
     val settings: AppSettings = AppSettings(),
     val whitelistConfig: WhitelistConfig = WhitelistConfig(),
-    val whitelistEntries: List<String> = emptyList(),
+    val whitelistEntries: List<WhitelistEntry> = emptyList(),
     val installEvents: List<InstallEvent> = emptyList(),
     val latestMessage: UiMessage? = null,
 )

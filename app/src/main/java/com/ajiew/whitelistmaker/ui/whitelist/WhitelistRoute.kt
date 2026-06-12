@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -43,6 +44,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ajiew.whitelistmaker.domain.AppUiState
@@ -64,7 +67,9 @@ internal fun WhitelistRoute(
     innerPadding: PaddingValues,
 ) {
     val sortedWhitelistEntries = remember(uiState.whitelistEntries) {
-        uiState.whitelistEntries.sortedWith(String.CASE_INSENSITIVE_ORDER)
+        uiState.whitelistEntries.sortedWith(
+            compareBy(String.CASE_INSENSITIVE_ORDER) { it.packageName },
+        )
     }
     val whitelistListState = rememberLazyListState()
 
@@ -156,7 +161,7 @@ internal fun WhitelistRoute(
                                 )
                             }
                         } else {
-                            items(sortedWhitelistEntries, key = { it }) { packageName ->
+                            items(sortedWhitelistEntries, key = { it.packageName }) { entry ->
                                 Surface(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -164,15 +169,33 @@ internal fun WhitelistRoute(
                                     shape = RoundedCornerShape(16.dp),
                                     color = MaterialTheme.colorScheme.surface,
                                 ) {
-                                    Text(
-                                        text = packageName,
+                                    Row(
                                         modifier = Modifier.padding(
                                             horizontal = 14.dp,
                                             vertical = 10.dp,
                                         ),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                    )
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = entry.packageName,
+                                            modifier = Modifier.weight(1f),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        Text(
+                                            text = entry.appLabel,
+                                            modifier = Modifier
+                                                .padding(start = 12.dp)
+                                                .widthIn(max = 160.dp),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            textAlign = TextAlign.End,
+                                        )
+                                    }
                                 }
                             }
                         }
