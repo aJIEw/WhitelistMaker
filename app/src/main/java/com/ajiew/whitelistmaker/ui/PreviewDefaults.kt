@@ -17,6 +17,7 @@ internal object PreviewDefaults {
         onCopyWhitelist = { },
         onPasteWhitelistFromClipboard = { },
         onAddToWhitelist = { _, _ -> },
+        onRemoveFromWhitelist = { },
         onIgnoreEvent = { },
         onDeleteEvent = { },
         onRestoreDeletedEvent = { },

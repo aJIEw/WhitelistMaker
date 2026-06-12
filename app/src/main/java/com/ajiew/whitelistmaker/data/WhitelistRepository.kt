@@ -106,6 +106,12 @@ class WhitelistRepository(
         }
     }
 
+    suspend fun removeFromWhitelist(packageName: String) {
+        if (whitelistFileStore.removePackage(packageName)) {
+            setMessage("已从白名单删除 $packageName")
+        }
+    }
+
     suspend fun ignoreEvent(eventId: String) {
         installEventStore.updateDecision(eventId, EventDecision.Ignored)
         setMessage("已忽略该安装事件")

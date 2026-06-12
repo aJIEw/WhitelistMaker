@@ -1,6 +1,7 @@
 package com.ajiew.whitelistmaker.ui.whitelist
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -25,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -32,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -72,6 +75,7 @@ internal fun WhitelistRoute(
         )
     }
     val whitelistListState = rememberLazyListState()
+    var pendingRemovalPackageName by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -133,7 +137,14 @@ internal fun WhitelistRoute(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Text("白名单列表", style = MaterialTheme.typography.titleMedium)
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("白名单列表", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            text = "长按列表项可删除",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     StatusPill(
                         label = "${uiState.whitelistEntries.size} 个包名",
                         color = MaterialTheme.colorScheme.primaryContainer,
@@ -165,6 +176,12 @@ internal fun WhitelistRoute(
                                 Surface(
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .combinedClickable(
+                                            onClick = { },
+                                            onLongClick = {
+                                                pendingRemovalPackageName = entry.packageName
+                                            },
+                                        )
                                         .animateItem(),
                                     shape = RoundedCornerShape(16.dp),
                                     color = MaterialTheme.colorScheme.surface,
@@ -208,6 +225,17 @@ internal fun WhitelistRoute(
             }
         }
     }
+
+    pendingRemovalPackageName?.let { packageName ->
+        WhitelistDeleteConfirmationDialog(
+            packageName = packageName,
+            onDismiss = { pendingRemovalPackageName = null },
+            onConfirm = {
+                pendingRemovalPackageName = null
+                actions.onRemoveFromWhitelist(packageName)
+            },
+        )
+    }
 }
 
 @Preview
@@ -217,6 +245,44 @@ private fun WhitelistRoutePreview() {
         uiState = PreviewDefaults.uiState,
         actions = PreviewDefaults.actions,
         innerPadding = PaddingValues(),
+    )
+}
+
+@Composable
+private fun WhitelistDeleteConfirmationDialog(
+    packageName: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("从白名单删除？") },
+        text = {
+            Text("确认删除包名 $packageName？此操作无法撤销。")
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = "删除",
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        },
+    )
+}
+
+@Preview
+@Composable
+private fun WhitelistDeleteConfirmationDialogPreview() {
+    WhitelistDeleteConfirmationDialog(
+        packageName = "com.example.reader",
+        onDismiss = { },
+        onConfirm = { },
     )
 }
 

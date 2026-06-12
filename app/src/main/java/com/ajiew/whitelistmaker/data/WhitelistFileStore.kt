@@ -47,6 +47,17 @@ class WhitelistFileStore(
         true
     }
 
+    suspend fun removePackage(packageName: String): Boolean = withContext(Dispatchers.IO) {
+        val entries = loadEntries()
+        if (!entries.contains(packageName)) {
+            return@withContext false
+        }
+        val updatedEntries = entries.filterNot { it == packageName }
+        writeAll(updatedEntries)
+        whitelistEntriesFlow.value = updatedEntries
+        true
+    }
+
     suspend fun exportToUri(uri: Uri) = withContext(Dispatchers.IO) {
         val content = buildExportContent(loadEntries())
         context.contentResolver.openOutputStream(uri, "wt")?.bufferedWriter()?.use { writer ->

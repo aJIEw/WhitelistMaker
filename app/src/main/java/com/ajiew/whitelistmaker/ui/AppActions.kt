@@ -10,6 +10,7 @@ data class AppActions(
     val onCopyWhitelist: () -> Unit,
     val onPasteWhitelistFromClipboard: () -> Unit,
     val onAddToWhitelist: (String, String) -> Unit,
+    val onRemoveFromWhitelist: (String) -> Unit,
     val onIgnoreEvent: (String) -> Unit,
     val onDeleteEvent: (String) -> Unit,
     val onRestoreDeletedEvent: (InstallEvent) -> Unit,

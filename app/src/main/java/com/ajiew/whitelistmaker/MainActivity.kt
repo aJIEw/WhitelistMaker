@@ -86,6 +86,7 @@ class MainActivity : ComponentActivity() {
                         onCopyWhitelist = viewModel::copyWhitelistToClipboard,
                         onPasteWhitelistFromClipboard = viewModel::pasteWhitelistFromClipboard,
                         onAddToWhitelist = viewModel::addEventToWhitelist,
+                        onRemoveFromWhitelist = viewModel::removeFromWhitelist,
                         onIgnoreEvent = viewModel::ignoreEvent,
                         onDeleteEvent = viewModel::deleteEvent,
                         onRestoreDeletedEvent = viewModel::restoreDeletedEvent,

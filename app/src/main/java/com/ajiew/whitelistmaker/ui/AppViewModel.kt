@@ -60,6 +60,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun removeFromWhitelist(packageName: String) {
+        viewModelScope.launch {
+            repository.removeFromWhitelist(packageName)
+        }
+    }
+
     fun ignoreEvent(eventId: String) {
         viewModelScope.launch {
             repository.ignoreEvent(eventId)
