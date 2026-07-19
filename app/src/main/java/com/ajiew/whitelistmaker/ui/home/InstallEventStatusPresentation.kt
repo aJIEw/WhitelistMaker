@@ -1,7 +1,6 @@
 package com.ajiew.whitelistmaker.ui.home
 
 import com.ajiew.whitelistmaker.domain.EventDecision
-import com.ajiew.whitelistmaker.domain.EventDecisionOrigin
 import com.ajiew.whitelistmaker.domain.InstallEvent
 
 enum class InstallEventStatusTone {
@@ -17,12 +16,15 @@ data class InstallEventStatus(
 )
 
 object InstallEventStatusPresentation {
-    fun from(event: InstallEvent): InstallEventStatus {
+    fun from(
+        event: InstallEvent,
+        isInheritedAdded: Boolean,
+    ): InstallEventStatus {
         return when (event.decision) {
             EventDecision.Pending -> InstallEventStatus("待处理", InstallEventStatusTone.Pending)
             EventDecision.Added -> {
-                if (event.decisionOrigin == EventDecisionOrigin.Inherited) {
-                    InstallEventStatus("沿用 · 已添加", InstallEventStatusTone.Inherited)
+                if (isInheritedAdded) {
+                    InstallEventStatus("沿用：已添加", InstallEventStatusTone.Inherited)
                 } else {
                     InstallEventStatus("已添加", InstallEventStatusTone.Added)
                 }

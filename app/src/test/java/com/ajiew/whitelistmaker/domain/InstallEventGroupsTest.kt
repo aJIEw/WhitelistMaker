@@ -66,14 +66,67 @@ class InstallEventGroupsTest {
         assertEquals(listOf("2", "1"), twoHistoryGroup.visibleHistory(expanded = false).map(InstallEvent::id))
     }
 
+    @Test
+    fun isInheritedAdded_usesEarliestAddedEventAsBaseline() {
+        val earliestAdded = installEvent(
+            id = "earliest-added",
+            installedAt = 100,
+            decision = EventDecision.Added,
+        )
+        val laterLegacyAdded = installEvent(
+            id = "later-legacy-added",
+            installedAt = 200,
+            decision = EventDecision.Added,
+        )
+        val latestInheritedAdded = installEvent(
+            id = "latest-inherited-added",
+            installedAt = 300,
+            decision = EventDecision.Added,
+            decisionOrigin = EventDecisionOrigin.Inherited,
+        )
+        val group = InstallEventGroups.from(
+            listOf(laterLegacyAdded, latestInheritedAdded, earliestAdded)
+        ).single()
+
+        assertEquals(false, group.isInheritedAdded(earliestAdded))
+        assertEquals(true, group.isInheritedAdded(laterLegacyAdded))
+        assertEquals(true, group.isInheritedAdded(latestInheritedAdded))
+    }
+
+    @Test
+    fun isInheritedAdded_usesIdAsStableTieBreakForSameInstallTime() {
+        val firstById = installEvent(
+            id = "added-a",
+            installedAt = 100,
+            decision = EventDecision.Added,
+        )
+        val secondById = installEvent(
+            id = "added-b",
+            installedAt = 100,
+            decision = EventDecision.Added,
+        )
+
+        val reversedInputGroup = InstallEventGroups.from(listOf(secondById, firstById)).single()
+        val normalInputGroup = InstallEventGroups.from(listOf(firstById, secondById)).single()
+
+        assertEquals(false, reversedInputGroup.isInheritedAdded(firstById))
+        assertEquals(true, reversedInputGroup.isInheritedAdded(secondById))
+        assertEquals(false, normalInputGroup.isInheritedAdded(firstById))
+        assertEquals(true, normalInputGroup.isInheritedAdded(secondById))
+    }
+
     private fun installEvent(
         id: String,
         installedAt: Long,
         packageName: String = "com.example.repeated",
+        decision: EventDecision = EventDecision.Pending,
+        decisionOrigin: EventDecisionOrigin = EventDecisionOrigin.Manual,
     ) = InstallEvent(
         id = id,
         packageName = packageName,
         appLabel = "Repeated",
         installedAt = installedAt,
+        decision = decision,
+        decisionOrigin = decisionOrigin,
     )
 }

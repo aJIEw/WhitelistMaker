@@ -303,7 +303,10 @@ private fun InstallEventGroupCard(
                             )
                         }
                     }
-                    EventMetadataRow(group.latest)
+                    EventMetadataRow(
+                        event = group.latest,
+                        isInheritedAdded = group.isInheritedAdded(group.latest),
+                    )
                     if (group.latest.decision == EventDecision.Pending) {
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Button(
@@ -334,7 +337,10 @@ private fun InstallEventGroupCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         group.visibleHistory(historyExpanded).forEach { event ->
-                            EventMetadataRow(event)
+                            EventMetadataRow(
+                                event = event,
+                                isInheritedAdded = group.isInheritedAdded(event),
+                            )
                         }
                         if (group.history.size > InstallEventGroup.DEFAULT_VISIBLE_HISTORY_COUNT) {
                             TextButton(
@@ -358,13 +364,16 @@ private fun InstallEventGroupCard(
 }
 
 @Composable
-private fun EventMetadataRow(event: InstallEvent) {
+private fun EventMetadataRow(
+    event: InstallEvent,
+    isInheritedAdded: Boolean,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        EventStatusPill(event)
+        EventStatusPill(event, isInheritedAdded)
         Text(
             text = formatTimestamp(event.installedAt),
             style = MaterialTheme.typography.bodySmall,
@@ -374,8 +383,11 @@ private fun EventMetadataRow(event: InstallEvent) {
 }
 
 @Composable
-private fun EventStatusPill(event: InstallEvent) {
-    val status = InstallEventStatusPresentation.from(event)
+private fun EventStatusPill(
+    event: InstallEvent,
+    isInheritedAdded: Boolean,
+) {
+    val status = InstallEventStatusPresentation.from(event, isInheritedAdded)
     val darkTheme = isSystemInDarkTheme()
     StatusPill(
         label = status.label,

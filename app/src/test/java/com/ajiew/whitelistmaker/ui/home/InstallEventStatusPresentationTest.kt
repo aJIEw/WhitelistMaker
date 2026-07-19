@@ -17,7 +17,7 @@ class InstallEventStatusPresentationTest {
             decision = EventDecision.Added,
         )
 
-        val status = InstallEventStatusPresentation.from(event)
+        val status = InstallEventStatusPresentation.from(event, isInheritedAdded = false)
 
         assertEquals("已添加", status.label)
         assertEquals(InstallEventStatusTone.Added, status.tone)
@@ -34,9 +34,26 @@ class InstallEventStatusPresentationTest {
             decisionOrigin = EventDecisionOrigin.Inherited,
         )
 
-        val status = InstallEventStatusPresentation.from(event)
+        val status = InstallEventStatusPresentation.from(event, isInheritedAdded = true)
 
-        assertEquals("沿用 · 已添加", status.label)
+        assertEquals("沿用：已添加", status.label)
         assertEquals(InstallEventStatusTone.Inherited, status.tone)
+    }
+
+    @Test
+    fun from_labelsEarliestAddedAsBaselineRegardlessOfStoredOrigin() {
+        val event = InstallEvent(
+            id = "baseline",
+            packageName = "com.example.app",
+            appLabel = "Example",
+            installedAt = 100,
+            decision = EventDecision.Added,
+            decisionOrigin = EventDecisionOrigin.Inherited,
+        )
+
+        val status = InstallEventStatusPresentation.from(event, isInheritedAdded = false)
+
+        assertEquals("已添加", status.label)
+        assertEquals(InstallEventStatusTone.Added, status.tone)
     }
 }
