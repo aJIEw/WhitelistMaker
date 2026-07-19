@@ -10,11 +10,25 @@ enum class ServiceStatus {
 enum class EventDecision {
     Pending,
     Added,
-    Ignored;
+    Ignored,
+}
 
+enum class EventDecisionOrigin {
+    Manual,
+    Inherited,
+}
+
+data class EventResolution(
+    val decision: EventDecision,
+    val origin: EventDecisionOrigin,
+) {
     companion object {
-        fun forNewInstall(isWhitelisted: Boolean): EventDecision {
-            return if (isWhitelisted) Added else Pending
+        fun forNewInstall(isWhitelisted: Boolean): EventResolution {
+            return if (isWhitelisted) {
+                EventResolution(EventDecision.Added, EventDecisionOrigin.Inherited)
+            } else {
+                EventResolution(EventDecision.Pending, EventDecisionOrigin.Manual)
+            }
         }
     }
 }
@@ -35,6 +49,7 @@ data class InstallEvent(
     val appLabel: String,
     val installedAt: Long,
     val decision: EventDecision = EventDecision.Pending,
+    val decisionOrigin: EventDecisionOrigin = EventDecisionOrigin.Manual,
 )
 
 data class WhitelistConfig(

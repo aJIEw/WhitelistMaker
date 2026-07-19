@@ -1,6 +1,7 @@
 package com.ajiew.whitelistmaker.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -363,7 +364,7 @@ private fun EventMetadataRow(event: InstallEvent) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        EventStatusPill(event.decision)
+        EventStatusPill(event)
         Text(
             text = formatTimestamp(event.installedAt),
             style = MaterialTheme.typography.bodySmall,
@@ -373,22 +374,38 @@ private fun EventMetadataRow(event: InstallEvent) {
 }
 
 @Composable
-private fun EventStatusPill(decision: EventDecision) {
+private fun EventStatusPill(event: InstallEvent) {
+    val status = InstallEventStatusPresentation.from(event)
+    val darkTheme = isSystemInDarkTheme()
     StatusPill(
-        label = when (decision) {
-            EventDecision.Pending -> "待处理"
-            EventDecision.Added -> "已添加"
-            EventDecision.Ignored -> "已忽略"
+        label = status.label,
+        color = when (status.tone) {
+            InstallEventStatusTone.Pending -> MaterialTheme.colorScheme.tertiaryContainer
+            InstallEventStatusTone.Added -> if (darkTheme) {
+                Color(0xFF1C5437)
+            } else {
+                Color(0xFFD6F5E3)
+            }
+            InstallEventStatusTone.Inherited -> if (darkTheme) {
+                Color(0xFF354656)
+            } else {
+                Color(0xFFDCE6F0)
+            }
+            InstallEventStatusTone.Ignored -> MaterialTheme.colorScheme.surfaceVariant
         },
-        color = when (decision) {
-            EventDecision.Pending -> MaterialTheme.colorScheme.tertiaryContainer
-            EventDecision.Added -> MaterialTheme.colorScheme.primaryContainer
-            EventDecision.Ignored -> MaterialTheme.colorScheme.surfaceVariant
-        },
-        contentColor = when (decision) {
-            EventDecision.Pending -> MaterialTheme.colorScheme.onTertiaryContainer
-            EventDecision.Added -> MaterialTheme.colorScheme.onPrimaryContainer
-            EventDecision.Ignored -> MaterialTheme.colorScheme.onSurfaceVariant
+        contentColor = when (status.tone) {
+            InstallEventStatusTone.Pending -> MaterialTheme.colorScheme.onTertiaryContainer
+            InstallEventStatusTone.Added -> if (darkTheme) {
+                Color(0xFFC0F0D2)
+            } else {
+                Color(0xFF0B3D24)
+            }
+            InstallEventStatusTone.Inherited -> if (darkTheme) {
+                Color(0xFFD5E4F2)
+            } else {
+                Color(0xFF273847)
+            }
+            InstallEventStatusTone.Ignored -> MaterialTheme.colorScheme.onSurfaceVariant
         },
     )
 }

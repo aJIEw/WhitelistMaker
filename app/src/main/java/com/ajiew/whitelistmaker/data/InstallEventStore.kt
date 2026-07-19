@@ -9,6 +9,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import com.ajiew.whitelistmaker.domain.EventDecision
+import com.ajiew.whitelistmaker.domain.EventDecisionOrigin
+import com.ajiew.whitelistmaker.domain.EventResolution
 import com.ajiew.whitelistmaker.domain.InstallEventCollection
 import com.ajiew.whitelistmaker.domain.InstallEvent
 import org.json.JSONArray
@@ -26,7 +28,7 @@ class InstallEventStore(context: Context) {
     suspend fun recordInstallEvent(
         packageName: String,
         appLabel: String,
-        decision: EventDecision = EventDecision.Pending,
+        resolution: EventResolution,
     ): InstallEvent = withContext(Dispatchers.IO) {
         writeMutex.withLock {
             val updated = buildList {
@@ -36,7 +38,8 @@ class InstallEventStore(context: Context) {
                         packageName = packageName,
                         appLabel = appLabel,
                         installedAt = System.currentTimeMillis(),
-                        decision = decision,
+                        decision = resolution.decision,
+                        decisionOrigin = resolution.origin,
                     )
                 )
                 addAll(eventsFlow.value.filterNot {
@@ -52,7 +55,10 @@ class InstallEventStore(context: Context) {
         writeMutex.withLock {
             val updated = eventsFlow.value.map { event ->
                 if (event.id == eventId) {
-                    event.copy(decision = decision)
+                    event.copy(
+                        decision = decision,
+                        decisionOrigin = EventDecisionOrigin.Manual,
+                    )
                 } else {
                     event
                 }
@@ -89,6 +95,7 @@ class InstallEventStore(context: Context) {
                     .put("appLabel", event.appLabel)
                     .put("installedAt", event.installedAt)
                     .put("decision", event.decision.name)
+                    .put("decisionOrigin", event.decisionOrigin.name)
             )
         }
         storageFile.writeText(payload.toString())
@@ -111,6 +118,9 @@ class InstallEventStore(context: Context) {
                         appLabel = item.optString("appLabel", item.getString("packageName")),
                         installedAt = item.getLong("installedAt"),
                         decision = EventDecision.valueOf(item.optString("decision", EventDecision.Pending.name)),
+                        decisionOrigin = EventDecisionOrigin.valueOf(
+                            item.optString("decisionOrigin", EventDecisionOrigin.Manual.name),
+                        ),
                     )
                 )
             }

@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import com.ajiew.whitelistmaker.MainActivity
 import com.ajiew.whitelistmaker.R
 import com.ajiew.whitelistmaker.domain.EventDecision
+import com.ajiew.whitelistmaker.domain.EventDecisionOrigin
 import com.ajiew.whitelistmaker.domain.InstallEvent
 
 class NotificationHelper(private val context: Context) {
@@ -71,8 +72,10 @@ class NotificationHelper(private val context: Context) {
         val notificationBuilder = NotificationCompat.Builder(context, INSTALL_EVENT_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_monochrome).setContentTitle(event.appLabel)
             .setContentText(
-                if (event.decision == EventDecision.Added) {
-                    "${event.packageName} · 已在白名单"
+                if (event.decision == EventDecision.Added &&
+                    event.decisionOrigin == EventDecisionOrigin.Inherited
+                ) {
+                    "${event.packageName} · 已在白名单，沿用上次结果"
                 } else {
                     event.packageName
                 },

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
 import com.ajiew.whitelistmaker.domain.AppUiState
 import com.ajiew.whitelistmaker.domain.EventDecision
+import com.ajiew.whitelistmaker.domain.EventResolution
 import com.ajiew.whitelistmaker.domain.InstallEvent
 import com.ajiew.whitelistmaker.domain.ServiceStatus
 import com.ajiew.whitelistmaker.domain.UiMessage
@@ -93,10 +94,10 @@ class WhitelistRepository(
 
     suspend fun recordInstalledPackage(packageName: String): InstallEvent {
         val label = resolveInstalledAppLabel(packageName) ?: packageName
-        val decision = EventDecision.forNewInstall(
+        val resolution = EventResolution.forNewInstall(
             isWhitelisted = whitelistFileStore.containsPackage(packageName),
         )
-        val event = installEventStore.recordInstallEvent(packageName, label, decision)
+        val event = installEventStore.recordInstallEvent(packageName, label, resolution)
         setMessage("发现新安装应用：$packageName")
         return event
     }

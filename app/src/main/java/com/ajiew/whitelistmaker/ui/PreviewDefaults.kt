@@ -3,6 +3,7 @@ package com.ajiew.whitelistmaker.ui
 import com.ajiew.whitelistmaker.domain.AppSettings
 import com.ajiew.whitelistmaker.domain.AppUiState
 import com.ajiew.whitelistmaker.domain.EventDecision
+import com.ajiew.whitelistmaker.domain.EventDecisionOrigin
 import com.ajiew.whitelistmaker.domain.InstallEvent
 import com.ajiew.whitelistmaker.domain.ServiceStatus
 import com.ajiew.whitelistmaker.domain.UiMessage
@@ -62,6 +63,7 @@ internal object PreviewDefaults {
                 appLabel = "Music",
                 installedAt = 1_713_951_600_000,
                 decision = EventDecision.Added,
+                decisionOrigin = EventDecisionOrigin.Inherited,
             ),
             InstallEvent(
                 id = "3",
