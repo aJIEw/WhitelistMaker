@@ -26,7 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
 import com.ajiew.whitelistmaker.domain.AppUiState
 import com.ajiew.whitelistmaker.domain.InstallEvent
 import com.ajiew.whitelistmaker.domain.ServiceStatus
@@ -43,21 +43,22 @@ fun AppScreen(
     uiState: AppUiState,
     actions: AppActions,
     initialRoute: AppRoute,
-    deletedEvents: Flow<InstallEvent>,
+    deletedEventGroups: Flow<List<InstallEvent>>,
 ) {
     var selectedRoute by rememberSaveable { mutableStateOf(initialRoute) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(deletedEvents) {
-        deletedEvents.collectLatest { deletedEvent ->
+    LaunchedEffect(deletedEventGroups) {
+        deletedEventGroups.collect { deletedEvents ->
+            val latestEvent = deletedEvents.maxBy(InstallEvent::installedAt)
             val result = snackbarHostState.showSnackbar(
-                message = "${deletedEvent.appLabel} 安装记录已删除",
+                message = "${latestEvent.appLabel} 的 ${deletedEvents.size} 条安装记录已删除",
                 actionLabel = "撤销",
                 withDismissAction = true,
                 duration = SnackbarDuration.Long,
             )
             if (result == SnackbarResult.ActionPerformed) {
-                actions.onRestoreDeletedEvent(deletedEvent)
+                actions.onRestoreDeletedEventGroup(deletedEvents)
             }
         }
     }

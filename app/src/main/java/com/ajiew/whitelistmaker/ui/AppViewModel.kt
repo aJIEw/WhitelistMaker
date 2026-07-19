@@ -20,7 +20,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: WhitelistRepository =
         (application as WhitelistMakerApp).appContainer.repository
 
-    private val deletedEventsFlow = MutableSharedFlow<InstallEvent>()
+    private val deletedEventGroupsFlow = MutableSharedFlow<List<InstallEvent>>()
 
     val uiState: StateFlow<AppUiState> = repository.uiState()
         .stateIn(
@@ -28,7 +28,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = AppUiState(),
         )
-    val deletedEvents = deletedEventsFlow.asSharedFlow()
+    val deletedEventGroups = deletedEventGroupsFlow.asSharedFlow()
 
     fun importWhitelist(uri: Uri) {
         viewModelScope.launch {
@@ -72,17 +72,17 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun deleteEvent(eventId: String) {
+    fun deleteEventGroup(packageName: String) {
         viewModelScope.launch {
-            repository.deleteEvent(eventId)?.let { deletedEvent ->
-                deletedEventsFlow.emit(deletedEvent)
+            repository.deleteEventGroup(packageName).takeIf(List<InstallEvent>::isNotEmpty)?.let { deletedEvents ->
+                deletedEventGroupsFlow.emit(deletedEvents)
             }
         }
     }
 
-    fun restoreDeletedEvent(event: InstallEvent) {
+    fun restoreDeletedEventGroup(events: List<InstallEvent>) {
         viewModelScope.launch {
-            repository.restoreDeletedEvent(event)
+            repository.restoreDeletedEventGroup(events)
         }
     }
 

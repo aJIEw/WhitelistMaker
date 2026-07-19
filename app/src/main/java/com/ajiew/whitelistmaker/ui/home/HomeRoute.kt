@@ -25,15 +25,22 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import com.ajiew.whitelistmaker.domain.AppUiState
 import com.ajiew.whitelistmaker.domain.EventDecision
 import com.ajiew.whitelistmaker.domain.InstallEvent
+import com.ajiew.whitelistmaker.domain.InstallEventGroup
+import com.ajiew.whitelistmaker.domain.InstallEventGroups
 import com.ajiew.whitelistmaker.domain.ServiceStatus
 import com.ajiew.whitelistmaker.ui.AppActions
 import com.ajiew.whitelistmaker.ui.PreviewDefaults
@@ -62,6 +71,9 @@ internal fun HomeRoute(
     actions: AppActions,
     innerPadding: PaddingValues,
 ) {
+    val eventGroups = remember(uiState.installEvents) {
+        InstallEventGroups.from(uiState.installEvents)
+    }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -94,9 +106,9 @@ internal fun HomeRoute(
                 )
             }
         } else {
-            items(uiState.installEvents, key = { it.id }) { event ->
-                InstallEventCard(
-                    event = event,
+            items(eventGroups, key = { it.packageName }) { group ->
+                InstallEventGroupCard(
+                    group = group,
                     actions = actions,
                     modifier = Modifier.animateItem(),
                 )
@@ -242,17 +254,18 @@ private fun WhitelistFileCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun InstallEventCard(
-    event: InstallEvent,
+private fun InstallEventGroupCard(
+    group: InstallEventGroup,
     actions: AppActions,
     modifier: Modifier = Modifier,
 ) {
+    var historyExpanded by rememberSaveable(group.packageName) { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
         positionalThreshold = { distance -> distance * 0.35f },
     )
-    LaunchedEffect(dismissState.currentValue, event.id) {
+    LaunchedEffect(dismissState.currentValue, group.packageName) {
         if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
-            actions.onDeleteEvent(event.id)
+            actions.onDeleteEventGroup(group.packageName)
         }
     }
     SwipeToDismissBox(
@@ -278,43 +291,24 @@ private fun InstallEventCard(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = event.appLabel,
+                                text = group.latest.appLabel,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                             )
                             Text(
-                                text = event.packageName,
+                                text = group.packageName,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        StatusPill(
-                            label = when (event.decision) {
-                                EventDecision.Pending -> "待处理"
-                                EventDecision.Added -> "已添加"
-                                EventDecision.Ignored -> "已忽略"
-                            },
-                            color = when (event.decision) {
-                                EventDecision.Pending -> MaterialTheme.colorScheme.tertiaryContainer
-                                EventDecision.Added -> MaterialTheme.colorScheme.primaryContainer
-                                EventDecision.Ignored -> MaterialTheme.colorScheme.surfaceVariant
-                            },
-                            contentColor = when (event.decision) {
-                                EventDecision.Pending -> MaterialTheme.colorScheme.onTertiaryContainer
-                                EventDecision.Added -> MaterialTheme.colorScheme.onPrimaryContainer
-                                EventDecision.Ignored -> MaterialTheme.colorScheme.onSurfaceVariant
-                            },
-                        )
                     }
-                    Text(
-                        text = formatTimestamp(event.installedAt),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (event.decision == EventDecision.Pending) {
+                    EventMetadataRow(group.latest)
+                    if (group.latest.decision == EventDecision.Pending) {
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Button(
-                                onClick = { actions.onAddToWhitelist(event.id, event.packageName) },
+                                onClick = {
+                                    actions.onAddToWhitelist(group.latest.id, group.packageName)
+                                },
                                 modifier = Modifier.weight(1f),
                             ) {
                                 Icon(Icons.Outlined.TaskAlt, contentDescription = null)
@@ -322,7 +316,7 @@ private fun InstallEventCard(
                                 Text("添加")
                             }
                             OutlinedButton(
-                                onClick = { actions.onIgnoreEvent(event.id) },
+                                onClick = { actions.onIgnoreEvent(group.latest.id) },
                                 modifier = Modifier.weight(1f),
                             ) {
                                 Icon(Icons.Outlined.NotInterested, contentDescription = null)
@@ -331,8 +325,70 @@ private fun InstallEventCard(
                             }
                         }
                     }
+                    if (group.history.isNotEmpty()) {
+                        HorizontalDivider()
+                        Text(
+                            text = "历史记录（${group.history.size}）",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        group.visibleHistory(historyExpanded).forEach { event ->
+                            EventMetadataRow(event)
+                        }
+                        if (group.history.size > InstallEventGroup.DEFAULT_VISIBLE_HISTORY_COUNT) {
+                            TextButton(
+                                onClick = { historyExpanded = !historyExpanded },
+                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                            ) {
+                                Text(
+                                    if (historyExpanded) {
+                                        "收起"
+                                    } else {
+                                        "查看全部（${group.history.size}）"
+                                    },
+                                )
+                            }
+                        }
+                    }
                 }
             }
+        },
+    )
+}
+
+@Composable
+private fun EventMetadataRow(event: InstallEvent) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        EventStatusPill(event.decision)
+        Text(
+            text = formatTimestamp(event.installedAt),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun EventStatusPill(decision: EventDecision) {
+    StatusPill(
+        label = when (decision) {
+            EventDecision.Pending -> "待处理"
+            EventDecision.Added -> "已添加"
+            EventDecision.Ignored -> "已忽略"
+        },
+        color = when (decision) {
+            EventDecision.Pending -> MaterialTheme.colorScheme.tertiaryContainer
+            EventDecision.Added -> MaterialTheme.colorScheme.primaryContainer
+            EventDecision.Ignored -> MaterialTheme.colorScheme.surfaceVariant
+        },
+        contentColor = when (decision) {
+            EventDecision.Pending -> MaterialTheme.colorScheme.onTertiaryContainer
+            EventDecision.Added -> MaterialTheme.colorScheme.onPrimaryContainer
+            EventDecision.Ignored -> MaterialTheme.colorScheme.onSurfaceVariant
         },
     )
 }

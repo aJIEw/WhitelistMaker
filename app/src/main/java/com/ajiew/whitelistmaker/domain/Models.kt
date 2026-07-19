@@ -10,7 +10,13 @@ enum class ServiceStatus {
 enum class EventDecision {
     Pending,
     Added,
-    Ignored,
+    Ignored;
+
+    companion object {
+        fun forNewInstall(isWhitelisted: Boolean): EventDecision {
+            return if (isWhitelisted) Added else Pending
+        }
+    }
 }
 
 enum class WhitelistFileFormat(

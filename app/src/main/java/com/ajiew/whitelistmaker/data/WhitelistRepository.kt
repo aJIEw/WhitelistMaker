@@ -93,7 +93,10 @@ class WhitelistRepository(
 
     suspend fun recordInstalledPackage(packageName: String): InstallEvent {
         val label = resolveInstalledAppLabel(packageName) ?: packageName
-        val event = installEventStore.recordInstallEvent(packageName, label)
+        val decision = EventDecision.forNewInstall(
+            isWhitelisted = whitelistFileStore.containsPackage(packageName),
+        )
+        val event = installEventStore.recordInstallEvent(packageName, label, decision)
         setMessage("发现新安装应用：$packageName")
         return event
     }
@@ -122,12 +125,12 @@ class WhitelistRepository(
         setMessage("已忽略该安装事件")
     }
 
-    suspend fun deleteEvent(eventId: String): InstallEvent? {
-        return installEventStore.deleteEvent(eventId)
+    suspend fun deleteEventGroup(packageName: String): List<InstallEvent> {
+        return installEventStore.deletePackageEvents(packageName)
     }
 
-    suspend fun restoreDeletedEvent(event: InstallEvent) {
-        installEventStore.restoreEvent(event)
+    suspend fun restoreDeletedEventGroup(events: List<InstallEvent>) {
+        installEventStore.restoreEvents(events)
         setMessage("已撤销删除")
     }
 

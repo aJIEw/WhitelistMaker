@@ -23,6 +23,10 @@ class WhitelistFileStore(
 
     fun entriesFlow(): StateFlow<List<String>> = whitelistEntriesFlow.asStateFlow()
 
+    suspend fun containsPackage(packageName: String): Boolean = withContext(Dispatchers.IO) {
+        loadEntries().contains(packageName)
+    }
+
     suspend fun importWhitelist(uri: Uri): String = withContext(Dispatchers.IO) {
         val displayName = queryDisplayName(uri) ?: "已导入白名单"
         preferences.updateWhitelistConfig(
