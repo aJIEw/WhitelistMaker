@@ -95,7 +95,11 @@ internal fun HomeRoute(
             }
         } else {
             items(uiState.installEvents, key = { it.id }) { event ->
-                InstallEventCard(event, actions)
+                InstallEventCard(
+                    event = event,
+                    actions = actions,
+                    modifier = Modifier.animateItem(),
+                )
             }
         }
     }
@@ -241,6 +245,7 @@ private fun WhitelistFileCard(
 private fun InstallEventCard(
     event: InstallEvent,
     actions: AppActions,
+    modifier: Modifier = Modifier,
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
         positionalThreshold = { distance -> distance * 0.35f },
@@ -252,6 +257,7 @@ private fun InstallEventCard(
     }
     SwipeToDismissBox(
         state = dismissState,
+        modifier = modifier,
         enableDismissFromStartToEnd = false,
         enableDismissFromEndToStart = true,
         backgroundContent = {
