@@ -16,4 +16,5 @@ data class AppActions(
     val onRestoreDeletedEvent: (InstallEvent) -> Unit,
     val onToggleAutoStart: (Boolean) -> Unit,
     val onChangeWhitelistFormat: (WhitelistFileFormat) -> Unit,
+    val onToggleRevert: (Boolean) -> Unit,
 )

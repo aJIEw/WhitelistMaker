@@ -45,6 +45,7 @@ class AppPreferences(context: Context) {
             putString(KEY_WHITELIST_URI, config.importedUri).putString(
                 KEY_WHITELIST_NAME, config.importedDisplayName
             ).putString(KEY_WHITELIST_FORMAT, config.format.name)
+                .putBoolean(KEY_REVERT_ENABLED, config.revertEnabled)
         }
         whitelistConfigFlow.value = config
     }
@@ -52,6 +53,11 @@ class AppPreferences(context: Context) {
     fun updateWhitelistFormat(format: WhitelistFileFormat) {
         sharedPreferences.edit { putString(KEY_WHITELIST_FORMAT, format.name) }
         whitelistConfigFlow.value = whitelistConfigFlow.value.copy(format = format)
+    }
+
+    fun updateRevertEnabled(enabled: Boolean) {
+        sharedPreferences.edit { putBoolean(KEY_REVERT_ENABLED, enabled) }
+        whitelistConfigFlow.value = whitelistConfigFlow.value.copy(revertEnabled = enabled)
     }
 
     private fun loadSettings(): AppSettings {
@@ -69,6 +75,7 @@ class AppPreferences(context: Context) {
                 sharedPreferences.getString(KEY_WHITELIST_FORMAT, null),
                 WhitelistFileFormat.TrueHeader,
             ),
+            revertEnabled = sharedPreferences.getBoolean(KEY_REVERT_ENABLED, false),
         )
     }
 
@@ -84,5 +91,6 @@ class AppPreferences(context: Context) {
         private const val KEY_WHITELIST_URI = "whitelist_uri"
         private const val KEY_WHITELIST_NAME = "whitelist_name"
         private const val KEY_WHITELIST_FORMAT = "whitelist_format"
+        private const val KEY_REVERT_ENABLED = "revert_enabled"
     }
 }

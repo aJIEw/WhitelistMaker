@@ -23,15 +23,15 @@ Whitelist Maker 是一个单模块 Android 应用，用于监听设备中新安�
 - 在开机完成后按用户设置恢复监听服务。
 - 使用本地 JSON、私有文件和 `SharedPreferences` 保存数据。
 
-当前白名单格式只有 `WhitelistFileFormat.TrueHeader`：
+当前白名单格式只有 `WhitelistFileFormat.TrueHeader`。首行默认是 `false`；设置中开启“反转模式”后为 `true`：
 
 ```text
-true
+false
 com.example.first
 com.example.second
 ```
 
-首个非空行必须为 `true`，其余非空行必须是合法包名。解析时会保留原顺序并去重。
+首个非空行必须为 `true` 或 `false`，其余非空行必须是合法包名。解析时兼容两种布尔值，并保留原顺序、去重。
 
 ## 技术栈
 
@@ -248,4 +248,3 @@ rtk ./gradlew connectedDebugAndroidTest
 - 改页面交互：对应 Route -> `AppActions.kt` -> `AppViewModel.kt` -> `WhitelistRepository.kt`
 - 改共享 UI：`ui/components/`，并检查所有调用页面和 Preview
 - 改持久化：先确认旧文件、旧 Preference 或旧 URI 的兼容行为，再修改 Store
-

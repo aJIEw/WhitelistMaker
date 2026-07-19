@@ -23,6 +23,7 @@ internal object PreviewDefaults {
         onRestoreDeletedEvent = { },
         onToggleAutoStart = { },
         onChangeWhitelistFormat = { },
+        onToggleRevert = { },
     )
 
     val uiState = AppUiState(

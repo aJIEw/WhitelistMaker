@@ -123,6 +123,25 @@ private fun WhitelistFormatCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("反转模式", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        "开启时首行为 true，关闭时首行为 false。",
+                        modifier = Modifier.padding(end = 4.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = uiState.whitelistConfig.revertEnabled,
+                    onCheckedChange = actions.onToggleRevert,
+                )
+            }
         }
     }
 }

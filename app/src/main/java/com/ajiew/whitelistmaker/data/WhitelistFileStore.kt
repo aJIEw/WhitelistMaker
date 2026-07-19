@@ -30,6 +30,7 @@ class WhitelistFileStore(
                 importedUri = uri.toString(),
                 importedDisplayName = displayName,
                 format = preferences.currentWhitelistConfig().format,
+                revertEnabled = preferences.currentWhitelistConfig().revertEnabled,
             )
         )
         whitelistEntriesFlow.value = loadEntries()
@@ -125,8 +126,12 @@ class WhitelistFileStore(
     }
 
     private fun buildExportContent(entries: List<String>): String {
-        val format = preferences.currentWhitelistConfig().format
-        return WhitelistFormatParser.build(entries, format)
+        val config = preferences.currentWhitelistConfig()
+        return WhitelistFormatParser.build(
+            entries = entries,
+            format = config.format,
+            revertEnabled = config.revertEnabled,
+        )
     }
 
     private fun queryDisplayName(uri: Uri): String? {

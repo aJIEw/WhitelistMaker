@@ -76,6 +76,11 @@ class WhitelistRepository(
         setMessage("已选择白名单文件格式：${format.displayName}")
     }
 
+    fun updateRevertEnabled(enabled: Boolean) {
+        preferences.updateRevertEnabled(enabled)
+        setMessage(if (enabled) "已开启反转模式" else "已关闭反转模式")
+    }
+
     fun updateServiceStatus(status: ServiceStatus) {
         preferences.updateServiceStatus(status)
     }

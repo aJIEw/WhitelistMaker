@@ -92,6 +92,7 @@ class MainActivity : ComponentActivity() {
                         onRestoreDeletedEvent = viewModel::restoreDeletedEvent,
                         onToggleAutoStart = viewModel::updateAutoStart,
                         onChangeWhitelistFormat = viewModel::updateWhitelistFormat,
+                        onToggleRevert = viewModel::updateRevertEnabled,
                     )
                 }
 

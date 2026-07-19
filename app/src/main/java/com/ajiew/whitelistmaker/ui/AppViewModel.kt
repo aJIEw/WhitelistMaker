@@ -93,4 +93,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun updateWhitelistFormat(format: WhitelistFileFormat) {
         repository.updateWhitelistFormat(format)
     }
+
+    fun updateRevertEnabled(enabled: Boolean) {
+        repository.updateRevertEnabled(enabled)
+    }
 }
