@@ -14,6 +14,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.ajiew.whitelistmaker.MainActivity
 import com.ajiew.whitelistmaker.R
+import com.ajiew.whitelistmaker.domain.EventDecision
+import com.ajiew.whitelistmaker.domain.EventDecisionOrigin
 import com.ajiew.whitelistmaker.domain.InstallEvent
 
 class NotificationHelper(private val context: Context) {
@@ -67,25 +69,36 @@ class NotificationHelper(private val context: Context) {
             Intent(context, MainActivity::class.java).putExtra("route", "home"),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val addIntent = InstallEventActionReceiver.createIntent(
-            context = context,
-            action = InstallEventActionReceiver.ACTION_ADD_TO_WHITELIST,
-            eventId = event.id,
-            packageName = event.packageName,
-            notificationId = notificationId,
-        )
-        val ignoreIntent = InstallEventActionReceiver.createIntent(
-            context = context,
-            action = InstallEventActionReceiver.ACTION_IGNORE_EVENT,
-            eventId = event.id,
-            packageName = event.packageName,
-            notificationId = notificationId,
-        )
-        val notification = NotificationCompat.Builder(context, INSTALL_EVENT_CHANNEL_ID)
+        val notificationBuilder = NotificationCompat.Builder(context, INSTALL_EVENT_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_monochrome).setContentTitle(event.appLabel)
-            .setContentText(event.packageName).setContentIntent(contentIntent).setAutoCancel(true)
+            .setContentText(
+                if (event.decision == EventDecision.Added &&
+                    event.decisionOrigin == EventDecisionOrigin.Inherited
+                ) {
+                    "${event.packageName} · 已在白名单，沿用上次结果"
+                } else {
+                    event.packageName
+                },
+            ).setContentIntent(contentIntent).setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_STATUS).addAction(
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
+
+        if (event.decision == EventDecision.Pending) {
+            val addIntent = InstallEventActionReceiver.createIntent(
+                context = context,
+                action = InstallEventActionReceiver.ACTION_ADD_TO_WHITELIST,
+                eventId = event.id,
+                packageName = event.packageName,
+                notificationId = notificationId,
+            )
+            val ignoreIntent = InstallEventActionReceiver.createIntent(
+                context = context,
+                action = InstallEventActionReceiver.ACTION_IGNORE_EVENT,
+                eventId = event.id,
+                packageName = event.packageName,
+                notificationId = notificationId,
+            )
+            notificationBuilder.addAction(
                 R.drawable.ic_launcher_monochrome,
                 "添加",
                 PendingIntent.getBroadcast(
@@ -103,9 +116,10 @@ class NotificationHelper(private val context: Context) {
                     ignoreIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 ),
-            ).build()
+            )
+        }
 
-        NotificationManagerCompat.from(context).notify(notificationId, notification)
+        NotificationManagerCompat.from(context).notify(notificationId, notificationBuilder.build())
     }
 
     companion object {

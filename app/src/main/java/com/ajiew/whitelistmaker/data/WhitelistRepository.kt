@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
 import com.ajiew.whitelistmaker.domain.AppUiState
 import com.ajiew.whitelistmaker.domain.EventDecision
+import com.ajiew.whitelistmaker.domain.EventResolution
 import com.ajiew.whitelistmaker.domain.InstallEvent
 import com.ajiew.whitelistmaker.domain.ServiceStatus
 import com.ajiew.whitelistmaker.domain.UiMessage
@@ -93,7 +94,10 @@ class WhitelistRepository(
 
     suspend fun recordInstalledPackage(packageName: String): InstallEvent {
         val label = resolveInstalledAppLabel(packageName) ?: packageName
-        val event = installEventStore.recordInstallEvent(packageName, label)
+        val resolution = EventResolution.forNewInstall(
+            isWhitelisted = whitelistFileStore.containsPackage(packageName),
+        )
+        val event = installEventStore.recordInstallEvent(packageName, label, resolution)
         setMessage("发现新安装应用：$packageName")
         return event
     }
@@ -122,12 +126,12 @@ class WhitelistRepository(
         setMessage("已忽略该安装事件")
     }
 
-    suspend fun deleteEvent(eventId: String): InstallEvent? {
-        return installEventStore.deleteEvent(eventId)
+    suspend fun deleteEventGroup(packageName: String): List<InstallEvent> {
+        return installEventStore.deletePackageEvents(packageName)
     }
 
-    suspend fun restoreDeletedEvent(event: InstallEvent) {
-        installEventStore.restoreEvent(event)
+    suspend fun restoreDeletedEventGroup(events: List<InstallEvent>) {
+        installEventStore.restoreEvents(events)
         setMessage("已撤销删除")
     }
 

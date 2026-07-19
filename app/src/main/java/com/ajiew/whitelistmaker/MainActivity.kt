@@ -88,8 +88,8 @@ class MainActivity : ComponentActivity() {
                         onAddToWhitelist = viewModel::addEventToWhitelist,
                         onRemoveFromWhitelist = viewModel::removeFromWhitelist,
                         onIgnoreEvent = viewModel::ignoreEvent,
-                        onDeleteEvent = viewModel::deleteEvent,
-                        onRestoreDeletedEvent = viewModel::restoreDeletedEvent,
+                        onDeleteEventGroup = viewModel::deleteEventGroup,
+                        onRestoreDeletedEventGroup = viewModel::restoreDeletedEventGroup,
                         onToggleAutoStart = viewModel::updateAutoStart,
                         onChangeWhitelistFormat = viewModel::updateWhitelistFormat,
                         onToggleRevert = viewModel::updateRevertEnabled,
@@ -100,7 +100,7 @@ class MainActivity : ComponentActivity() {
                     uiState = uiState,
                     actions = appActions,
                     initialRoute = intent.routeExtra(),
-                    deletedEvents = viewModel.deletedEvents,
+                    deletedEventGroups = viewModel.deletedEventGroups,
                 )
             }
         }

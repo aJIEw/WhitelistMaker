@@ -13,6 +13,26 @@ enum class EventDecision {
     Ignored,
 }
 
+enum class EventDecisionOrigin {
+    Manual,
+    Inherited,
+}
+
+data class EventResolution(
+    val decision: EventDecision,
+    val origin: EventDecisionOrigin,
+) {
+    companion object {
+        fun forNewInstall(isWhitelisted: Boolean): EventResolution {
+            return if (isWhitelisted) {
+                EventResolution(EventDecision.Added, EventDecisionOrigin.Inherited)
+            } else {
+                EventResolution(EventDecision.Pending, EventDecisionOrigin.Manual)
+            }
+        }
+    }
+}
+
 enum class WhitelistFileFormat(
     val displayName: String,
     val description: String,
@@ -29,6 +49,7 @@ data class InstallEvent(
     val appLabel: String,
     val installedAt: Long,
     val decision: EventDecision = EventDecision.Pending,
+    val decisionOrigin: EventDecisionOrigin = EventDecisionOrigin.Manual,
 )
 
 data class WhitelistConfig(

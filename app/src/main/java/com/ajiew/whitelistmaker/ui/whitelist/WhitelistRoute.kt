@@ -75,6 +75,7 @@ internal fun WhitelistRoute(
         )
     }
     val whitelistListState = rememberLazyListState()
+    val whitelistItemShape = RoundedCornerShape(16.dp)
     var pendingRemovalPackageName by remember { mutableStateOf<String?>(null) }
 
     Column(
@@ -176,6 +177,7 @@ internal fun WhitelistRoute(
                                 Surface(
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .clip(whitelistItemShape)
                                         .combinedClickable(
                                             onClick = { },
                                             onLongClick = {
@@ -183,7 +185,7 @@ internal fun WhitelistRoute(
                                             },
                                         )
                                         .animateItem(),
-                                    shape = RoundedCornerShape(16.dp),
+                                    shape = whitelistItemShape,
                                     color = MaterialTheme.colorScheme.surface,
                                 ) {
                                     Row(
