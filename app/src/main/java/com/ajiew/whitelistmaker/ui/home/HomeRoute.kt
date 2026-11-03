@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.ajiew.whitelistmaker.BuildConfig
 import com.ajiew.whitelistmaker.domain.AppUiState
 import com.ajiew.whitelistmaker.domain.EventDecision
 import com.ajiew.whitelistmaker.domain.InstallEvent
@@ -157,12 +158,21 @@ private fun HeroStatusCard(
                 .padding(22.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text(
-                    "安装白名单助手",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        "安装白名单助手",
+                        modifier = Modifier.alignByBaseline(),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "v${BuildConfig.VERSION_NAME}",
+                        modifier = Modifier.alignByBaseline(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.72f),
+                    )
+                }
                 Text(
                     "监听新安装的应用，并由你决定哪些包名要追加到白名单文件。",
                     style = MaterialTheme.typography.bodyLarge,
