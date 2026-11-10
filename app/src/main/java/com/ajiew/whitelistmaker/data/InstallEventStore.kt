@@ -67,6 +67,23 @@ class InstallEventStore(context: Context) {
         }
     }
 
+    suspend fun revertIgnoredToPending(eventId: String): InstallEvent? = withContext(Dispatchers.IO) {
+        writeMutex.withLock {
+            val ignoredEvent = eventsFlow.value.firstOrNull {
+                it.id == eventId && it.decision == EventDecision.Ignored
+            } ?: return@withLock null
+            val revertedEvent = ignoredEvent.copy(
+                decision = EventDecision.Pending,
+                decisionOrigin = EventDecisionOrigin.Manual,
+            )
+            val updated = eventsFlow.value.map { event ->
+                if (event.id == eventId) revertedEvent else event
+            }
+            persist(updated)
+            revertedEvent
+        }
+    }
+
     suspend fun deletePackageEvents(packageName: String): List<InstallEvent> = withContext(Dispatchers.IO) {
         writeMutex.withLock {
             val deletion = InstallEventCollection.deletePackage(eventsFlow.value, packageName)

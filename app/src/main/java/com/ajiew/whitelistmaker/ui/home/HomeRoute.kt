@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileOpen
@@ -126,6 +127,24 @@ private fun HomeRoutePreview() {
         uiState = PreviewDefaults.uiState,
         actions = PreviewDefaults.actions,
         innerPadding = PaddingValues(),
+    )
+}
+
+@Preview
+@Composable
+private fun IgnoredInstallEventGroupCardPreview() {
+    InstallEventGroupCard(
+        group = InstallEventGroup(
+            latest = InstallEvent(
+                id = "ignored",
+                packageName = "com.example.notes",
+                appLabel = "Notes",
+                installedAt = 1_713_955_200_000,
+                decision = EventDecision.Ignored,
+            ),
+            history = emptyList(),
+        ),
+        actions = PreviewDefaults.actions,
     )
 }
 
@@ -337,6 +356,16 @@ private fun InstallEventGroupCard(
                                 Spacer(Modifier.padding(horizontal = 4.dp))
                                 Text("忽略")
                             }
+                        }
+                    }
+                    if (group.latest.decision == EventDecision.Ignored) {
+                        OutlinedButton(
+                            onClick = { actions.onRevertIgnoredEvent(group.latest.id) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Icon(Icons.AutoMirrored.Outlined.Undo, contentDescription = null)
+                            Spacer(Modifier.padding(horizontal = 4.dp))
+                            Text("撤回忽略")
                         }
                     }
                     if (group.history.isNotEmpty()) {

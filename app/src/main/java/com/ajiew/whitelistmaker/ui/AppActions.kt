@@ -12,6 +12,7 @@ data class AppActions(
     val onAddToWhitelist: (String, String) -> Unit,
     val onRemoveFromWhitelist: (String) -> Unit,
     val onIgnoreEvent: (String) -> Unit,
+    val onRevertIgnoredEvent: (String) -> Unit,
     val onDeleteEventGroup: (String) -> Unit,
     val onRestoreDeletedEventGroup: (List<InstallEvent>) -> Unit,
     val onToggleAutoStart: (Boolean) -> Unit,

@@ -9,6 +9,7 @@ import com.ajiew.whitelistmaker.domain.EventResolution
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -68,5 +69,44 @@ class InstallEventStoreTest {
 
         assertEquals(EventDecisionOrigin.Inherited, recorded.decisionOrigin)
         assertEquals(recorded, reloaded)
+    }
+
+    @Test
+    fun revertIgnoredToPending_changesIgnoredEventToPending() = runBlocking {
+        val store = InstallEventStore(context)
+        val recorded = store.recordInstallEvent(
+            packageName = "com.example.ignored",
+            appLabel = "Ignored",
+            resolution = EventResolution(
+                decision = EventDecision.Ignored,
+                origin = EventDecisionOrigin.Manual,
+            ),
+        )
+
+        val reverted = store.revertIgnoredToPending(recorded.id)
+
+        assertEquals(EventDecision.Pending, reverted?.decision)
+        assertEquals(EventDecisionOrigin.Manual, reverted?.decisionOrigin)
+        val reloaded = InstallEventStore(context).eventsFlow().value.single()
+        assertEquals(EventDecision.Pending, reloaded.decision)
+    }
+
+    @Test
+    fun revertIgnoredToPending_ignoresAddedEvent() = runBlocking {
+        val store = InstallEventStore(context)
+        val recorded = store.recordInstallEvent(
+            packageName = "com.example.added",
+            appLabel = "Added",
+            resolution = EventResolution(
+                decision = EventDecision.Added,
+                origin = EventDecisionOrigin.Manual,
+            ),
+        )
+
+        val reverted = store.revertIgnoredToPending(recorded.id)
+
+        assertNull(reverted)
+        val reloaded = InstallEventStore(context).eventsFlow().value.single()
+        assertEquals(EventDecision.Added, reloaded.decision)
     }
 }

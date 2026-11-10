@@ -20,6 +20,7 @@ internal object PreviewDefaults {
         onAddToWhitelist = { _, _ -> },
         onRemoveFromWhitelist = { },
         onIgnoreEvent = { },
+        onRevertIgnoredEvent = { },
         onDeleteEventGroup = { },
         onRestoreDeletedEventGroup = { },
         onToggleAutoStart = { },

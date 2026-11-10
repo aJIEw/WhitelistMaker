@@ -126,6 +126,15 @@ class WhitelistRepository(
         setMessage("已忽略该安装事件")
     }
 
+    suspend fun revertIgnoredEvent(eventId: String) {
+        val reverted = installEventStore.revertIgnoredToPending(eventId)
+        if (reverted != null) {
+            setMessage("已撤回忽略，可重新处理 ${reverted.packageName}")
+        } else {
+            setMessage("该安装记录已不是“已忽略”状态")
+        }
+    }
+
     suspend fun deleteEventGroup(packageName: String): List<InstallEvent> {
         return installEventStore.deletePackageEvents(packageName)
     }

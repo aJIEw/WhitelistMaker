@@ -88,6 +88,7 @@ class MainActivity : ComponentActivity() {
                         onAddToWhitelist = viewModel::addEventToWhitelist,
                         onRemoveFromWhitelist = viewModel::removeFromWhitelist,
                         onIgnoreEvent = viewModel::ignoreEvent,
+                        onRevertIgnoredEvent = viewModel::revertIgnoredEvent,
                         onDeleteEventGroup = viewModel::deleteEventGroup,
                         onRestoreDeletedEventGroup = viewModel::restoreDeletedEventGroup,
                         onToggleAutoStart = viewModel::updateAutoStart,

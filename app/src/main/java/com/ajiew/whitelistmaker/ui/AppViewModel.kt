@@ -72,6 +72,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun revertIgnoredEvent(eventId: String) {
+        viewModelScope.launch {
+            repository.revertIgnoredEvent(eventId)
+        }
+    }
+
     fun deleteEventGroup(packageName: String) {
         viewModelScope.launch {
             repository.deleteEventGroup(packageName).takeIf(List<InstallEvent>::isNotEmpty)?.let { deletedEvents ->
