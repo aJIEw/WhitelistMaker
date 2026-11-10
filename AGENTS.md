@@ -39,7 +39,7 @@ com.example.second
 - Android Gradle Plugin `9.2.0`
 - Gradle Wrapper `9.4.1`
 - Java 11 字节码目标
-- `minSdk 26`、`targetSdk 36`、`compileSdk 36.1`
+- `minSdk 26`、`targetSdk 37`、`compileSdk 37`
 - Jetpack Compose + Material 3
 - Lifecycle `ViewModel`、`StateFlow`、Coroutines
 - Navigation Compose 依赖已引入，但当前页面切换由 `AppScreen` 内部状态控制
