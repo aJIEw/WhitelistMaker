@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -34,7 +33,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,6 +61,16 @@ private data class WhitelistScrollbarState(
     val firstVisibleItemIndex: Int,
 )
 
+@Preview
+@Composable
+private fun WhitelistRoutePreview() {
+    WhitelistRoute(
+        uiState = PreviewDefaults.uiState,
+        actions = PreviewDefaults.actions,
+        innerPadding = PaddingValues(),
+    )
+}
+
 @Composable
 internal fun WhitelistRoute(
     uiState: AppUiState,
@@ -90,46 +98,13 @@ internal fun WhitelistRoute(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Card(
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(
-                    text = if (uiState.whitelistConfig.usingDefaultFile) {
-                        "正在使用应用默认白名单文件。"
-                    } else {
-                        "当前写入文件：${uiState.whitelistConfig.importedDisplayName ?: "已导入文件"}"
-                    },
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(
-                        onClick = actions.onCopyWhitelist,
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.ContentCopy,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Spacer(Modifier.size(4.dp))
-                        Text("复制到剪贴板", maxLines = 1, softWrap = false)
-                    }
-                }
-            }
-        }
-
-        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
             shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
+            // Whitelist Packages List
             Column(modifier = Modifier.fillMaxSize()) {
                 Row(
                     modifier = Modifier
@@ -224,6 +199,39 @@ internal fun WhitelistRoute(
                         modifier = Modifier.align(Alignment.CenterEnd),
                     )
                 }
+
+                // Bottom Section
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp)
+                        .padding(top = 20.dp)
+                        .padding(bottom = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = if (uiState.whitelistConfig.usingDefaultFile) {
+                            "正在使用应用默认白名单文件。"
+                        } else {
+                            "当前写入文件：${uiState.whitelistConfig.importedDisplayName ?: "已导入文件"}"
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedButton(
+                            onClick = actions.onCopyWhitelist,
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.ContentCopy,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.size(4.dp))
+                            Text("复制到剪贴板", maxLines = 1, softWrap = false)
+                        }
+                    }
+                }
             }
         }
     }
@@ -238,54 +246,6 @@ internal fun WhitelistRoute(
             },
         )
     }
-}
-
-@Preview
-@Composable
-private fun WhitelistRoutePreview() {
-    WhitelistRoute(
-        uiState = PreviewDefaults.uiState,
-        actions = PreviewDefaults.actions,
-        innerPadding = PaddingValues(),
-    )
-}
-
-@Composable
-private fun WhitelistDeleteConfirmationDialog(
-    packageName: String,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("从白名单删除？") },
-        text = {
-            Text("确认删除包名 $packageName？此操作无法撤销。")
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    text = "删除",
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
-            }
-        },
-    )
-}
-
-@Preview
-@Composable
-private fun WhitelistDeleteConfirmationDialogPreview() {
-    WhitelistDeleteConfirmationDialog(
-        packageName = "com.example.reader",
-        onDismiss = { },
-        onConfirm = { },
-    )
 }
 
 @Composable
@@ -325,8 +285,9 @@ private fun WhitelistListScrollbar(
     ) {
         val trackHeightPx = constraints.maxHeight.toFloat()
         val minThumbHeightPx = with(density) { 36.dp.toPx() }
-        val thumbHeightPx =
-            (trackHeightPx * state.visibleItems / state.totalItems).coerceIn(minThumbHeightPx, trackHeightPx)
+        val thumbHeightPx = (trackHeightPx * state.visibleItems / state.totalItems).coerceIn(
+            minThumbHeightPx, trackHeightPx
+        )
         val maxOffsetPx = (trackHeightPx - thumbHeightPx).coerceAtLeast(0f)
         val maxFirstVisibleIndex = (state.totalItems - state.visibleItems).coerceAtLeast(1)
         val offsetRatio = state.firstVisibleItemIndex.toFloat() / maxFirstVisibleIndex
