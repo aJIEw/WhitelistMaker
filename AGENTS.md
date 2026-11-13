@@ -36,9 +36,9 @@ com.example.second
 
 ## 技术栈
 
-- Kotlin `2.3.21`，官方代码风格
-- Android Gradle Plugin `9.2.0`
-- Gradle Wrapper `9.4.1`
+- Kotlin `2.4.21`，官方代码风格
+- Android Gradle Plugin `9.5.0`
+- Gradle Wrapper `9.6.0`
 - Java 11 字节码目标
 - `minSdk 26`、`targetSdk 37`、`compileSdk 37`
 - Jetpack Compose + Material 3
@@ -198,7 +198,7 @@ MainActivity SAF launcher / clipboard
 
 ## 测试规范
 
-当前有效的业务测试主要是 `WhitelistFormatParserTest`；模板生成的 `ExampleUnitTest` 和 `ExampleInstrumentedTest` 只提供基础占位覆盖，不能作为业务正确性的证据。
+当前 JVM 单元测试位于 `app/src/test`，覆盖白名单解析与条目映射、安装事件分组与状态展示；设备测试位于 `app/src/androidTest`，覆盖 `WhitelistFileStore` 和 `InstallEventStore`。模板生成的 `ExampleUnitTest` 和 `ExampleInstrumentedTest` 只提供基础占位覆盖，不能作为业务正确性的证据。
 
 按改动风险选择测试：
 
