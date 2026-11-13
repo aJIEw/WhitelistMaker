@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.NotificationsOff
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,11 +30,10 @@ import com.ajiew.whitelistmaker.domain.AppUiState
 import com.ajiew.whitelistmaker.domain.InstallEvent
 import com.ajiew.whitelistmaker.domain.ServiceStatus
 import com.ajiew.whitelistmaker.ui.home.HomeRoute
-import com.ajiew.whitelistmaker.ui.settings.SettingsRoute
 import com.ajiew.whitelistmaker.ui.whitelist.WhitelistRoute
 
 enum class AppRoute {
-    Home, Whitelist, Settings,
+    Home, Whitelist,
 }
 
 @Composable
@@ -79,7 +77,6 @@ fun AppScreen(
             when (selectedRoute) {
                 AppRoute.Home -> HomeRoute(uiState, actions, innerPadding)
                 AppRoute.Whitelist -> WhitelistRoute(uiState, actions, innerPadding)
-                AppRoute.Settings -> SettingsRoute(uiState, actions, innerPadding)
             }
         }
     }
@@ -95,7 +92,6 @@ private fun AppBottomBar(
         listOf(
             AppRoute.Home to "主页",
             AppRoute.Whitelist to "白名单",
-            AppRoute.Settings to "设置",
         ).forEach { (route, label) ->
             NavigationBarItem(
                 selected = selectedRoute == route,
@@ -112,7 +108,6 @@ private fun AppBottomBar(
                                 Icons.Outlined.NotificationsOff
                             }
                             AppRoute.Whitelist -> Icons.Outlined.Shield
-                            AppRoute.Settings -> Icons.Outlined.Settings
                         },
                         contentDescription = label,
                     )

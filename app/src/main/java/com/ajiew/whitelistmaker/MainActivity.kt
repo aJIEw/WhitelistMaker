@@ -92,7 +92,6 @@ class MainActivity : ComponentActivity() {
                         onDeleteEventGroup = viewModel::deleteEventGroup,
                         onRestoreDeletedEventGroup = viewModel::restoreDeletedEventGroup,
                         onToggleAutoStart = viewModel::updateAutoStart,
-                        onChangeWhitelistFormat = viewModel::updateWhitelistFormat,
                         onToggleRevert = viewModel::updateRevertEnabled,
                     )
                 }
@@ -123,7 +122,6 @@ private fun Intent?.routeExtra(): AppRoute {
     val route = this?.getStringExtra("route")
     return when (route) {
         "whitelist" -> AppRoute.Whitelist
-        "settings" -> AppRoute.Settings
         else -> AppRoute.Home
     }
 }

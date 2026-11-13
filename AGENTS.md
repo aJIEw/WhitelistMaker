@@ -21,9 +21,10 @@ Whitelist Maker 是一个单模块 Android 应用，用于监听设备中新安�
 - 通过应用页面或通知操作将安装事件标记为“已添加”或“已忽略”。
 - 导入、导出、复制和粘贴白名单文件。
 - 在开机完成后按用户设置恢复监听服务。
+- 在首页服务状态卡片和白名单文件卡片底部提供默认收起的设置区。
 - 使用本地 JSON、私有文件和 `SharedPreferences` 保存数据。
 
-当前白名单格式只有 `WhitelistFileFormat.TrueHeader`。首行默认是 `false`；设置中开启“反转模式”后为 `true`：
+当前白名单格式只有 `WhitelistFileFormat.TrueHeader`。首行默认是 `false`；在首页白名单文件卡片的设置区开启“反转模式”后为 `true`：
 
 ```text
 false
@@ -76,7 +77,6 @@ app/src/main/java/com/ajiew/whitelistmaker/
     ├── PreviewDefaults.kt          # Compose Preview 固定数据
     ├── home/                       # 服务状态与安装事件页面
     ├── whitelist/                  # 白名单列表页面
-    ├── settings/                   # 设置页面
     ├── components/                 # 跨页面复用的小型 Compose 组件
     └── theme/                      # Material 3 主题与排版
 ```
@@ -168,6 +168,9 @@ MainActivity SAF launcher / clipboard
 - 长列表使用 `LazyColumn`，稳定数据提供 `key`；昂贵派生结果使用带正确 key 的 `remember`。
 - 保留 edge-to-edge 下 `innerPadding` 的处理，避免内容被系统栏或底部导航遮挡。
 - 当前界面文案以简体中文为主，且多数直接位于 Compose。小改动遵循所在文件风格；涉及复用或本地化时再迁移到资源，不要顺手批量改写现有文案。
+- 首页两张主卡片的设置区默认收起，各自使用本地 `rememberSaveable` 状态，可独立展开；展开状态不要写入 ViewModel 或持久化存储。
+- 折叠入口统一由 `ExpandableSettingsFooter` 承载，保持至少 `48dp` 点击区域，使用 `clickable(indication = null)` 去除 ripple，并保留动态可访问文案。
+- 折叠入口与前一行间距为 `4dp`，卡片底部 padding 为 `12dp`；调整间距时保持设置内容下方紧凑，不顺手改全局卡片间距。
 
 ## 数据约束
 
@@ -177,7 +180,7 @@ MainActivity SAF launcher / clipboard
 - `InstallEventStore` 将事件按 `installedAt` 降序保存到内存状态。
 - 同一包名的新待处理事件会替换旧的待处理事件，但不会删除已处理历史。
 - 读取旧安装事件时，缺失 `appLabel` 应回退到 `packageName`。
-- 导入 URI、显示名称、格式和自动启动设置由 `AppPreferences` 保存。
+- 导入 URI、显示名称、格式、反转模式和自动启动设置由 `AppPreferences` 保存。
 - `serviceStatus` 是运行时状态，应用重新启动时默认为 `Stopped`，不要把旧运行状态当成服务真实状态。
 
 修改持久化字段、JSON 结构、Preference key 或白名单格式时，应考虑已有安装数据的兼容读取，并增加对应测试。
@@ -246,5 +249,6 @@ rtk ./gradlew connectedDebugAndroidTest
 - 改通知操作：`NotificationHelper.kt` -> `InstallEventActionReceiver.kt` -> `WhitelistRepository.kt`
 - 改服务启动逻辑：`MainActivity.kt` / `BootReceiver.kt` -> `ServiceController.kt` -> `InstallMonitorService.kt`
 - 改页面交互：对应 Route -> `AppActions.kt` -> `AppViewModel.kt` -> `WhitelistRepository.kt`
+- 改首页卡片设置：`HomeRoute.kt` 中的 `HeroStatusCard` / `WhitelistFileCard` / `ExpandableSettingsFooter` -> `AppActions.kt` -> `AppViewModel.kt` -> `WhitelistRepository.kt`
 - 改共享 UI：`ui/components/`，并检查所有调用页面和 Preview
 - 改持久化：先确认旧文件、旧 Preference 或旧 URI 的兼容行为，再修改 Store

@@ -18,7 +18,6 @@ import com.ajiew.whitelistmaker.domain.EventResolution
 import com.ajiew.whitelistmaker.domain.InstallEvent
 import com.ajiew.whitelistmaker.domain.ServiceStatus
 import com.ajiew.whitelistmaker.domain.UiMessage
-import com.ajiew.whitelistmaker.domain.WhitelistFileFormat
 
 class WhitelistRepository(
     private val application: Application,
@@ -70,11 +69,6 @@ class WhitelistRepository(
 
     fun updateAutoStart(enabled: Boolean) {
         preferences.updateAutoStart(enabled)
-    }
-
-    fun updateWhitelistFormat(format: WhitelistFileFormat) {
-        preferences.updateWhitelistFormat(format)
-        setMessage("已选择白名单文件格式：${format.displayName}")
     }
 
     fun updateRevertEnabled(enabled: Boolean) {

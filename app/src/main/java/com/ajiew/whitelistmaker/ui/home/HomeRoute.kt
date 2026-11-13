@@ -1,15 +1,19 @@
 package com.ajiew.whitelistmaker.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.NotInterested
 import androidx.compose.material.icons.outlined.TaskAlt
@@ -33,6 +39,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
@@ -48,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -157,11 +166,21 @@ private fun HeroStatusCardPreview() {
     )
 }
 
+@Preview
+@Composable
+private fun WhitelistFileCardPreview() {
+    WhitelistFileCard(
+        uiState = PreviewDefaults.uiState,
+        actions = PreviewDefaults.actions,
+    )
+}
+
 @Composable
 private fun HeroStatusCard(
     uiState: AppUiState,
     actions: AppActions,
 ) {
+    var settingsExpanded by rememberSaveable { mutableStateOf(false) }
     Card(
         shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
@@ -174,7 +193,7 @@ private fun HeroStatusCard(
                         colors = listOf(Color(0xFF0B5CAD), Color(0xFF38A3A5)),
                     ),
                 )
-                .padding(22.dp),
+                .padding(start = 22.dp, top = 22.dp, end = 22.dp, bottom = 12.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -209,27 +228,61 @@ private fun HeroStatusCard(
                         contentColor = Color.White,
                     )
                 }
-                Button(
-                    onClick = {
-                        actions.onToggleService(uiState.settings.serviceStatus != ServiceStatus.Running)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (uiState.settings.serviceStatus == ServiceStatus.Running) {
-                            Color(0xFFD20808)
-                        } else {
-                            Color(0xFF1BCE71)
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Button(
+                        onClick = {
+                            actions.onToggleService(uiState.settings.serviceStatus != ServiceStatus.Running)
                         },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (uiState.settings.serviceStatus == ServiceStatus.Running) {
+                                Color(0xFFD20808)
+                            } else {
+                                Color(0xFF1BCE71)
+                            },
+                            contentColor = Color.White,
+                        ),
+                    ) {
+                        Text(
+                            if (uiState.settings.serviceStatus == ServiceStatus.Running) {
+                                "停止监听服务"
+                            } else {
+                                "开启监听服务"
+                            },
+                        )
+                    }
+                    ExpandableSettingsFooter(
+                        expanded = settingsExpanded,
+                        onExpandedChange = { settingsExpanded = it },
                         contentColor = Color.White,
-                    ),
-                ) {
-                    Text(
-                        if (uiState.settings.serviceStatus == ServiceStatus.Running) {
-                            "停止监听服务"
-                        } else {
-                            "开启监听服务"
-                        },
-                    )
+                        dividerColor = Color.White.copy(alpha = 0.24f),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                text = "开机或重启时自动开启监听服务",
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 12.dp),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = Color.White,
+                            )
+                            Switch(
+                                checked = uiState.settings.autoStartOnBoot,
+                                onCheckedChange = actions.onToggleAutoStart,
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = Color(0xFF1BCE71),
+                                    uncheckedThumbColor = Color.White.copy(alpha = 0.82f),
+                                    uncheckedTrackColor = Color.White.copy(alpha = 0.18f),
+                                    uncheckedBorderColor = Color.White.copy(alpha = 0.5f),
+                                ),
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -241,9 +294,10 @@ private fun WhitelistFileCard(
     uiState: AppUiState,
     actions: AppActions,
 ) {
+    var settingsExpanded by rememberSaveable { mutableStateOf(false) }
     Card(shape = RoundedCornerShape(28.dp)) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             SectionHeader(
@@ -259,25 +313,97 @@ private fun WhitelistFileCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = actions.onImportWhitelist, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Outlined.FileOpen, contentDescription = null)
-                    Spacer(Modifier.padding(horizontal = 4.dp))
-                    Text("导入文件")
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(onClick = actions.onImportWhitelist, modifier = Modifier.weight(1f)) {
+                        Icon(Icons.Outlined.FileOpen, contentDescription = null)
+                        Spacer(Modifier.padding(horizontal = 4.dp))
+                        Text("导入文件")
+                    }
+                    OutlinedButton(
+                        onClick = actions.onPasteWhitelistFromClipboard,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(
+                            Icons.Outlined.ContentPaste,
+                            modifier = Modifier.size(18.dp),
+                            contentDescription = null,
+                        )
+                        Spacer(Modifier.padding(horizontal = 4.dp))
+                        Text("从剪贴板复制", maxLines = 1, softWrap = false)
+                    }
                 }
-                OutlinedButton(
-                    onClick = actions.onPasteWhitelistFromClipboard,
-                    modifier = Modifier.weight(1f),
+                ExpandableSettingsFooter(
+                    expanded = settingsExpanded,
+                    onExpandedChange = { settingsExpanded = it },
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    dividerColor = MaterialTheme.colorScheme.outlineVariant,
                 ) {
-                    Icon(
-                        Icons.Outlined.ContentPaste,
-                        modifier = Modifier.size(18.dp),
-                        contentDescription = null,
-                    )
-                    Spacer(Modifier.padding(horizontal = 4.dp))
-                    Text("从剪贴板复制", maxLines = 1, softWrap = false)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 4.dp),
+                        ) {
+                            Text("反转模式", style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                text = "开启时为 true，关闭时为 false。",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Switch(
+                            checked = uiState.whitelistConfig.revertEnabled,
+                            onCheckedChange = actions.onToggleRevert,
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ExpandableSettingsFooter(
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    contentColor: Color,
+    dividerColor: Color,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 32.dp)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    role = Role.Button,
+                    onClickLabel = if (expanded) "收起设置" else "展开设置",
+                    onClick = { onExpandedChange(!expanded) },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                contentDescription = if (expanded) "收起设置" else "展开设置",
+                tint = contentColor,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+        if (expanded) {
+            HorizontalDivider(
+                modifier = Modifier.padding(top = 4.dp),
+                color = dividerColor,
+            )
+            Spacer(Modifier.padding(top = 8.dp))
+            content()
         }
     }
 }

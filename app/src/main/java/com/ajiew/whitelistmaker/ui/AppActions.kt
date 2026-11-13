@@ -1,7 +1,6 @@
 package com.ajiew.whitelistmaker.ui
 
 import com.ajiew.whitelistmaker.domain.InstallEvent
-import com.ajiew.whitelistmaker.domain.WhitelistFileFormat
 
 data class AppActions(
     val onToggleService: (Boolean) -> Unit,
@@ -16,6 +15,5 @@ data class AppActions(
     val onDeleteEventGroup: (String) -> Unit,
     val onRestoreDeletedEventGroup: (List<InstallEvent>) -> Unit,
     val onToggleAutoStart: (Boolean) -> Unit,
-    val onChangeWhitelistFormat: (WhitelistFileFormat) -> Unit,
     val onToggleRevert: (Boolean) -> Unit,
 )

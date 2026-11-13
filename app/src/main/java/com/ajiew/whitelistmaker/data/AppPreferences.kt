@@ -50,11 +50,6 @@ class AppPreferences(context: Context) {
         whitelistConfigFlow.value = config
     }
 
-    fun updateWhitelistFormat(format: WhitelistFileFormat) {
-        sharedPreferences.edit { putString(KEY_WHITELIST_FORMAT, format.name) }
-        whitelistConfigFlow.value = whitelistConfigFlow.value.copy(format = format)
-    }
-
     fun updateRevertEnabled(enabled: Boolean) {
         sharedPreferences.edit { putBoolean(KEY_REVERT_ENABLED, enabled) }
         whitelistConfigFlow.value = whitelistConfigFlow.value.copy(revertEnabled = enabled)

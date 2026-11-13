@@ -24,7 +24,6 @@ internal object PreviewDefaults {
         onDeleteEventGroup = { },
         onRestoreDeletedEventGroup = { },
         onToggleAutoStart = { },
-        onChangeWhitelistFormat = { },
         onToggleRevert = { },
     )
 

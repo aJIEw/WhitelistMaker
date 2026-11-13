@@ -147,7 +147,7 @@ internal fun WhitelistRoute(
                         )
                     }
                     StatusPill(
-                        label = "${uiState.whitelistEntries.size} 个包名",
+                        label = "${uiState.whitelistEntries.size} 个应用",
                         color = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                     )

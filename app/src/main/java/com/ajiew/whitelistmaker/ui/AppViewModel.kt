@@ -14,7 +14,6 @@ import com.ajiew.whitelistmaker.WhitelistMakerApp
 import com.ajiew.whitelistmaker.data.WhitelistRepository
 import com.ajiew.whitelistmaker.domain.AppUiState
 import com.ajiew.whitelistmaker.domain.InstallEvent
-import com.ajiew.whitelistmaker.domain.WhitelistFileFormat
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: WhitelistRepository =
@@ -94,10 +93,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateAutoStart(enabled: Boolean) {
         repository.updateAutoStart(enabled)
-    }
-
-    fun updateWhitelistFormat(format: WhitelistFileFormat) {
-        repository.updateWhitelistFormat(format)
     }
 
     fun updateRevertEnabled(enabled: Boolean) {
