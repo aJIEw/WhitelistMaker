@@ -58,6 +58,8 @@ com.example.second
 - `RECEIVE_BOOT_COMPLETED`：在用户启用相关设置后，于开机完成时恢复监听。
 - `QUERY_ALL_PACKAGES`：获取已安装应用信息并提高新应用识别的可靠性。
 
+应用不申请 `INTERNET` 权限，白名单内容与安装记录只保存在本机，不会上传到任何服务器。
+
 ## 技术栈
 
 - Jetpack Compose + Material 3
@@ -101,3 +103,9 @@ app/src/main/java/com/ajiew/whitelistmaker/
 ```bash
 ./gradlew connectedDebugAndroidTest
 ```
+
+## 许可证
+
+本项目基于 [MIT License](LICENSE) 开源。
+
+Copyright (c) 2026 aJIEw
