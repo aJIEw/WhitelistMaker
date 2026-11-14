@@ -89,7 +89,9 @@ app/src/main/java/com/ajiew/whitelistmaker/
 
 环境要求：
 
-- Android Studio，或配置了兼容 JDK 的 Android SDK 命令行环境
+- JDK 21
+- Android SDK Platform 37
+- Android Studio，或已配置上述环境的命令行工具
 
 常用命令：
 
@@ -111,6 +113,8 @@ app/src/main/java/com/ajiew/whitelistmaker/
 ```bash
 ./gradlew :app:packageReleaseApk
 ```
+
+该任务会通过 R8 压缩代码与资源，并需要签名配置（`keystore.properties` 或 `RELEASE_*` 环境变量），否则会在构建前直接失败。
 
 产物位于：
 

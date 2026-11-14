@@ -7,8 +7,8 @@ plugins {
 }
 
 val appApplicationId = "com.ajiew.whitelistmaker"
-val appVersionCode = 3
-val appVersionName = "1.0.3"
+val appVersionCode = 10
+val appVersionName = "1.0.4"
 val releaseArtifactName = "${appApplicationId}_v${appVersionName}_${appVersionCode}.apk"
 
 val releaseSigningProperties = Properties().apply {
@@ -77,7 +77,8 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

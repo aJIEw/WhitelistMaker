@@ -39,7 +39,7 @@ com.example.second
 - Kotlin `2.4.21`，官方代码风格
 - Android Gradle Plugin `9.5.0`
 - Gradle Wrapper `9.6.0`
-- Java 11 字节码目标
+- Gradle daemon toolchain JDK 21; `sourceCompatibility`/`targetCompatibility` = Java 11
 - `minSdk 26`、`targetSdk 37`、`compileSdk 37`
 - Jetpack Compose + Material 3
 - Lifecycle `ViewModel`、`StateFlow`、Coroutines
