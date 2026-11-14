@@ -104,11 +104,23 @@ app/src/main/java/com/ajiew/whitelistmaker/
 ./gradlew assembleDebug
 ```
 
-运行设备测试前，需要连接 Android 设备或启动模拟器：
+## 构建 Release APK
+
+运行 `packageReleaseApk` 任务：
 
 ```bash
-./gradlew connectedDebugAndroidTest
+./gradlew :app:packageReleaseApk
 ```
+
+产物位于：
+
+```text
+app/build/outputs/distribution/*.apk
+```
+
+### 通过 GitHub Actions 构建
+
+在仓库的 Actions 页面手动运行 `Build Release APK` workflow。
 
 ## 许可证
 
