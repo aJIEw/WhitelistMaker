@@ -195,6 +195,7 @@ MainActivity SAF launcher / clipboard
 - 通知 small icon 使用 `ic_launcher_monochrome`。Android 通知图标要求透明单色资源，不要直接替换成普通彩色启动图标。
 - 修改通知 action、Intent extra 或 request code 时，要同步检查创建方和 `InstallEventActionReceiver`。
 - SAF 导入依赖 `takePersistableUriPermission()`。修改文件选择流程时必须验证重启后 URI 仍可访问。
+- 备份规则由 `backup_rules.xml`（API 26–30）和 `data_extraction_rules.xml`（API 31+）承担，两者默认排除全部 domain。新增持久化文件或改变存储位置时必须同步检查这两处规则，避免安装记录与白名单进入云备份或设备迁移。
 
 ## 测试规范
 
